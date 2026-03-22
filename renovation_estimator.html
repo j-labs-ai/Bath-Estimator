@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renovation Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#17150e;
+  --paper:#f6f4ec;
+  --paper2:#edeade;
+  --paper3:#e2dfd0;
+  --gold:#b48c28;
+  --gold-lt:#f3e6bc;
+  --rust:#983a1b;
+  --rust-lt:#f3ddd4;
+  --teal:#196060;
+  --teal-lt:#d0ecec;
+  --blue:#1a3a6e;
+  --blue-lt:#d4def5;
+  --muted:#696650;
+  --border:rgba(23,21,14,.13);
+  --r:4px;
+}
+
+body{font-family:'DM Mono',monospace;background:var(--paper);color:var(--ink);min-height:100vh}
+
+/* ===== HEADER ===== */
+.hdr{background:var(--ink);color:var(--paper);padding:1.4rem 2.5rem;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden}
+.hdr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(55deg,transparent,transparent 8px,rgba(180,140,40,.07) 8px,rgba(180,140,40,.07) 9px);pointer-events:none}
+.hdr-left{display:flex;align-items:center;gap:16px}
+.hdr-icon{width:36px;height:36px;border:1px solid rgba(180,140,40,.4);border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-icon svg{width:18px;height:18px;fill:var(--gold)}
+.hdr-eye{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
+.hdr h1{font-family:'Fraunces',serif;font-size:20px;font-weight:300;line-height:1.1}
+.hdr h1 em{font-style:italic;color:var(--gold)}
+.hdr-tagline{font-size:9px;color:rgba(246,244,236,.38);letter-spacing:.05em}
+
+/* ===== INFO BAND ===== */
+.info-band{background:var(--paper3);border-bottom:1px solid var(--border);padding:.6rem 2.5rem;display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap}
+.ifield{display:flex;align-items:center;gap:7px}
+.ilbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.iinput{border:none;background:transparent;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);outline:none;border-bottom:1px solid var(--border);padding:2px 3px;width:140px;transition:border-color .15s}
+.iinput:focus{border-color:var(--gold)}
+.iinput.sm{width:68px}
+
+/* ===== MAIN LAYOUT ===== */
+.main{display:grid;grid-template-columns:1fr 320px;min-height:calc(100vh - 94px)}
+.left{padding:1.75rem 2.5rem 3rem;border-right:1px solid var(--border)}
+.right{background:var(--paper2);padding:1.5rem 1.4rem;position:sticky;top:0;height:100vh;overflow-y:auto}
+
+/* ===== PROJECT SELECTOR ===== */
+.selector-wrap{margin-bottom:1.75rem}
+.selector-label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem}
+.project-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.ptile{border:1px solid var(--border);border-radius:var(--r);padding:14px 8px 12px;background:var(--paper);cursor:pointer;transition:all .15s;text-align:center;position:relative}
+.ptile:hover{border-color:var(--gold);background:#fff}
+.ptile.active{border-color:var(--gold);background:var(--gold-lt);border-width:2px}
+.ptile.active .pt-icon{color:var(--gold)}
+.ptile.active .pt-name{color:var(--ink)}
+.pt-icon{font-size:22px;margin-bottom:6px;display:block;line-height:1;color:var(--muted);transition:color .15s}
+.pt-name{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);line-height:1.3;transition:color .15s}
+.ptile.active .pt-name{color:var(--gold)}
+.ptile.multi-active{border-color:var(--teal);background:var(--teal-lt);border-width:2px}
+.ptile.multi-active .pt-icon,.ptile.multi-active .pt-name{color:var(--teal)}
+
+/* Multi-project checkboxes */
+.multi-check-wrap{border:1px solid var(--teal);border-radius:var(--r);background:var(--teal-lt);padding:10px 14px;margin-bottom:1.25rem}
+.multi-check-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:8px}
+.multi-checks{display:flex;gap:8px;flex-wrap:wrap}
+.mcheck{display:flex;align-items:center;gap:5px;cursor:pointer}
+.mcheck input{accent-color:var(--teal);width:13px;height:13px;cursor:pointer}
+.mcheck span{font-size:10px;color:var(--teal);letter-spacing:.03em}
+
+/* ===== PROJECT SECTION BLOCKS ===== */
+.proj-block{margin-bottom:2rem}
+.proj-block-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);margin-bottom:1rem}
+.proj-block-hdr.bath{background:var(--gold-lt);border:1px solid rgba(180,140,40,.3)}
+.proj-block-hdr.kitchen{background:var(--rust-lt);border:1px solid rgba(152,58,27,.25)}
+.proj-block-hdr.addition{background:var(--teal-lt);border:1px solid rgba(25,96,96,.25)}
+.proj-block-hdr.other{background:var(--blue-lt);border:1px solid rgba(26,58,110,.25)}
+.proj-block-icon{font-size:18px}
+.proj-block-name{font-family:'Fraunces',serif;font-size:15px;font-weight:300;font-style:italic}
+.proj-block-hdr.bath .proj-block-name{color:var(--gold)}
+.proj-block-hdr.kitchen .proj-block-name{color:var(--rust)}
+.proj-block-hdr.addition .proj-block-name{color:var(--teal)}
+.proj-block-hdr.other .proj-block-name{color:var(--blue)}
+
+/* ===== QUESTION COMPONENTS (shared) ===== */
+.sec{margin-top:1.5rem}
+.sec:first-child{margin-top:0}
+.sec-hdr{display:flex;align-items:center;gap:8px;padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:.85rem}
+.sec-num{font-size:8px;letter-spacing:.15em;color:var(--muted)}
+.sec-name{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.sec-tag{font-size:8px;padding:1px 5px;border-radius:2px;letter-spacing:.04em}
+.tag-cost{background:var(--rust-lt);color:var(--rust)}
+.tag-risk{background:var(--gold-lt);color:var(--gold)}
+.tag-sub{background:var(--teal-lt);color:var(--teal)}
+.tag-allow{background:var(--gold-lt);color:var(--gold)}
+
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qgrid.three{grid-template-columns:1fr 1fr 1fr}
+.qgrid.one{grid-template-columns:1fr}
+.qgrid+.qgrid{margin-top:9px}
+.qcard{border:1px solid var(--border);border-radius:var(--r);padding:9px 10px;background:var(--paper)}
+.qlbl{font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;line-height:1.5;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.opts{display:flex;gap:5px;flex-wrap:wrap}
+.opt{font-family:'DM Mono',monospace;font-size:9.5px;padding:4px 8px;border:1px solid var(--border);border-radius:2px;cursor:pointer;background:var(--paper2);color:var(--muted);transition:all .11s;letter-spacing:.02em;line-height:1}
+.opt:hover{border-color:var(--ink);color:var(--ink)}
+.opt.sA{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.opt.sB{background:var(--gold);color:#fff;border-color:var(--gold)}
+.opt.sC{background:var(--rust);color:#fff;border-color:var(--rust)}
+.opt.sD{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+/* Site conditions box */
+.cond{border:1px solid var(--gold);border-radius:var(--r);padding:9px 11px;background:var(--gold-lt);margin-bottom:1.1rem}
+.cond-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.cond-opts{display:flex;gap:6px}
+.copt{font-family:'DM Mono',monospace;font-size:9.5px;padding:5px 10px;border:1px solid rgba(180,140,40,.4);border-radius:2px;cursor:pointer;background:transparent;color:var(--gold);transition:all .12s}
+.copt:hover,.copt.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.cond-note{font-size:9px;color:var(--gold);margin-top:5px;line-height:1.55;opacity:.8}
+
+/* Contractor number fields */
+.num-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:.9rem}
+.num-row.two{grid-template-columns:1fr 1fr}
+.nfield label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.nfield input{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:12px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .15s}
+.nfield input:focus{border-color:var(--gold)}
+.nfield .hint{font-size:9px;color:var(--muted);margin-top:2px}
+
+/* Empty state */
+.empty-state{text-align:center;padding:3rem 2rem;color:var(--muted)}
+.empty-state .es-icon{font-size:40px;margin-bottom:1rem;opacity:.4}
+.empty-state p{font-size:11px;line-height:1.7;opacity:.6}
+
+/* ===== RIGHT PANEL ===== */
+.est-lbl{font-family:'Fraunces',serif;font-size:14px;font-weight:300;color:var(--muted);margin-bottom:.9rem}
+
+.bignum{background:var(--ink);border-radius:var(--r);padding:14px 16px;margin-bottom:.9rem}
+.bn-eyebrow{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:rgba(246,244,236,.38);margin-bottom:2px}
+.bn-val{font-family:'Fraunces',serif;font-size:30px;font-weight:300;color:var(--gold);line-height:1.05}
+.bn-range{font-size:9.5px;color:rgba(246,244,236,.35);margin-top:2px}
+.bn-psf{font-size:9px;color:rgba(246,244,236,.28);margin-top:1px}
+
+/* Project subtotal cards */
+.proj-card{border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;overflow:hidden}
+.proj-card-hdr{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;cursor:pointer;user-select:none}
+.proj-card-hdr.bath{background:var(--gold-lt)}
+.proj-card-hdr.kitchen{background:var(--rust-lt)}
+.proj-card-hdr.addition{background:var(--teal-lt)}
+.proj-card-hdr.other{background:var(--blue-lt)}
+.pch-name{font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.proj-card-hdr.bath .pch-name{color:var(--gold)}
+.proj-card-hdr.kitchen .pch-name{color:var(--rust)}
+.proj-card-hdr.addition .pch-name{color:var(--teal)}
+.proj-card-hdr.other .pch-name{color:var(--blue)}
+.pch-total{font-size:12px;font-weight:500;color:var(--ink)}
+.pch-chevron{font-size:9px;color:var(--muted);transition:transform .2s}
+.pch-chevron.open{transform:rotate(180deg)}
+.proj-card-body{padding:8px 10px;background:var(--paper);display:none}
+.proj-card-body.open{display:block}
+
+.bk-sec{margin-bottom:.75rem}
+.bk-hd{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding-bottom:3px;border-bottom:1px solid var(--border);margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.bk-hd-tag{font-size:7px;padding:1px 4px;border-radius:2px}
+.bk-line{display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;border-bottom:1px dotted var(--border);font-size:10px}
+.bk-line:last-child{border-bottom:none}
+.bk-n{color:var(--muted);flex:1;line-height:1.4}
+.bk-v{color:var(--ink);text-align:right;font-size:9.5px;min-width:52px}
+.bk-sub{display:flex;justify-content:space-between;padding:3px 0;margin-top:1px;font-size:10px;font-weight:500;border-top:1px solid var(--border)}
+.bk-sub .bk-n{color:var(--ink)}
+.bk-allow .bk-v{color:var(--gold);font-weight:500}
+.bk-allow{border-left:2px solid var(--gold);padding-left:4px;margin:1px 0}
+
+.divider-line{border:none;border-top:1px solid var(--border);margin:.6rem 0}
+
+.grand-block{background:var(--ink);border-radius:var(--r);padding:12px 14px;margin-top:.75rem}
+.gb-label{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:rgba(246,244,236,.4);margin-bottom:2px}
+.gb-val{font-family:'Fraunces',serif;font-size:26px;font-weight:300;color:var(--gold);line-height:1.05}
+.gb-range{font-size:9px;color:rgba(246,244,236,.32);margin-top:2px}
+
+.mk-line{display:flex;justify-content:space-between;font-size:10px;padding:2.5px 0;color:var(--muted)}
+.mk-line.ohp{color:var(--teal);font-weight:500;margin-top:2px}
+
+.cx-wrap{margin:.6rem 0 .4rem}
+.cx-lbl{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.cx-bar{display:flex;gap:3px;margin-bottom:2px}
+.cx-seg{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background .28s}
+.cx-seg.on{background:var(--gold)}
+.cx-seg.hi{background:var(--rust)}
+.cx-v{font-size:9px;color:var(--muted)}
+
+.print-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;color:var(--muted);transition:all .14s;margin-top:.5rem}
+.print-btn:hover{border-color:var(--gold);color:var(--gold)}
+.disc{font-size:8.5px;color:var(--muted);line-height:1.65;margin-top:.65rem;opacity:.6}
+
+/* ===== PRINT ===== */
+@media print{
+  .hdr,.info-band,.left,.print-btn,.cond,.cx-wrap{display:none !important}
+  body{background:#fff;margin:0;padding:0;font-size:10px}
+  .main{display:block;min-height:unset}
+  .right{display:block;position:static;height:auto;overflow:visible;background:#fff;padding:0;width:100%;max-width:620px;margin:0 auto}
+  .print-header{display:flex !important;justify-content:space-between;align-items:flex-start;padding-bottom:12px;border-bottom:2px solid var(--ink);margin-bottom:14px}
+  .print-co-name{font-family:'Fraunces',serif;font-size:18px;font-weight:300;color:var(--ink)}
+  .print-co-name em{font-style:italic;color:var(--gold)}
+  .print-co-sub{font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.04em}
+  .print-proj{text-align:right;font-size:10px;color:var(--muted);line-height:1.8}
+  .print-proj strong{color:var(--ink)}
+  .est-lbl{display:none}
+  .bignum{background:#17150e !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin-bottom:12px}
+  .bn-val{font-size:24px !important}
+  /* expand all project cards for print */
+  .proj-card-body{display:block !important}
+  .pch-chevron{display:none}
+  .proj-card-hdr{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bk-allow{border-left:2px solid #b48c28;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bk-allow .bk-v{color:#b48c28}
+  .mk-line.ohp{color:#196060}
+  .grand-block{background:#17150e !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .print-footer{display:flex !important;justify-content:space-between;margin-top:20px;padding-top:12px;border-top:1px solid var(--border);gap:20px}
+  .sig-block{flex:1}
+  .sig-label{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px}
+  .sig-line{border-top:1px solid var(--muted);padding-top:4px;font-size:9px;color:var(--muted)}
+  .disc{display:block !important;font-size:8px;margin-top:10px;opacity:.65}
+}
+@media(max-width:900px){
+  .main{grid-template-columns:1fr}
+  .right{position:static;height:auto}
+  .project-tiles{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22" fill="none" stroke="#b48c28" stroke-width="1.5"/></svg>
+    </div>
+    <div>
+      <div class="hdr-eye">Field Estimating Tools</div>
+      <h1>Renovation <em>Estimator</em></h1>
+    </div>
+  </div>
+  <div class="hdr-tagline">2024 pricing · NE/Mid-Atlantic US baseline</div>
+</div>
+
+<div class="info-band">
+  <div class="ifield"><span class="ilbl">Client</span><input class="iinput" id="clientName" placeholder="Client name" type="text"></div>
+  <div class="ifield"><span class="ilbl">Address</span><input class="iinput" id="addr" placeholder="Project address" type="text"></div>
+  <div class="ifield"><span class="ilbl">Date</span><input class="iinput sm" id="estDate" type="text"></div>
+  <div class="ifield"><span class="ilbl">Est. #</span><input class="iinput sm" id="estNum" placeholder="001" type="text"></div>
+</div>
+
+<div class="main">
+<div class="left" id="left-panel">
+
+  <!-- PROJECT TYPE SELECTOR -->
+  <div class="selector-wrap">
+    <div class="selector-label">Select project type</div>
+    <div class="project-tiles">
+      <div class="ptile" id="tile-bathroom" onclick="selectProject('bathroom')">
+        <span class="pt-icon">🛁</span>
+        <span class="pt-name">Bathroom</span>
+      </div>
+      <div class="ptile" id="tile-kitchen" onclick="selectProject('kitchen')">
+        <span class="pt-icon">🍳</span>
+        <span class="pt-name">Kitchen</span>
+      </div>
+      <div class="ptile" id="tile-addition" onclick="selectProject('addition')">
+        <span class="pt-icon">🏗</span>
+        <span class="pt-name">Addition</span>
+      </div>
+      <div class="ptile" id="tile-other" onclick="selectProject('other')">
+        <span class="pt-icon">🔧</span>
+        <span class="pt-name">Other</span>
+      </div>
+      <div class="ptile" id="tile-multi" onclick="selectProject('multi')">
+        <span class="pt-icon">📋</span>
+        <span class="pt-name">Multi-project</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MULTI-PROJECT CHECKBOXES (shown only when multi selected) -->
+  <div class="multi-check-wrap" id="multi-checks" style="display:none">
+    <div class="multi-check-lbl">Select all projects included in this estimate</div>
+    <div class="multi-checks">
+      <label class="mcheck"><input type="checkbox" id="mc-bathroom" onchange="updateMulti()"><span>Bathroom</span></label>
+      <label class="mcheck"><input type="checkbox" id="mc-kitchen" onchange="updateMulti()"><span>Kitchen</span></label>
+      <label class="mcheck"><input type="checkbox" id="mc-addition" onchange="updateMulti()"><span>Addition</span></label>
+      <label class="mcheck"><input type="checkbox" id="mc-other" onchange="updateMulti()"><span>Other renovation</span></label>
+    </div>
+  </div>
+
+  <!-- SITE CONDITIONS -->
+  <div class="cond" id="site-cond" style="display:none">
+    <div class="cond-lbl">Site conditions assessed?</div>
+    <div class="cond-opts">
+      <button class="copt active" onclick="setCond(this,'unknown')">Estimating blind</button>
+      <button class="copt" onclick="setCond(this,'known')">Contractor walked job</button>
+    </div>
+    <div class="cond-note" id="cond-note">Blind estimate: ±20% band applied. Range tightens once you've walked the job.</div>
+  </div>
+
+  <!-- DYNAMIC QUESTION SECTIONS -->
+  <div id="questions-container">
+    <div class="empty-state">
+      <div class="es-icon">🏠</div>
+      <p>Select a project type above<br>to load the estimating questions.</p>
+    </div>
+  </div>
+
+  <!-- CONTRACTOR NUMBERS (shown once a project is selected) -->
+  <div id="contractor-numbers" style="display:none">
+    <div class="sec-hdr" style="margin-top:2rem">
+      <span class="sec-num">—</span>
+      <span class="sec-name">Your Numbers</span>
+    </div>
+    <div class="num-row">
+      <div class="nfield"><label>Overhead %</label><input type="number" id="overhead" value="18" min="0" max="50" oninput="calcAll()"><div class="hint">Typical 15–25%</div></div>
+      <div class="nfield"><label>Profit %</label><input type="number" id="profit" value="12" min="0" max="40" oninput="calcAll()"><div class="hint">Typical 8–15%</div></div>
+      <div class="nfield"><label>Labor $/hr</label><input type="number" id="laborRate" value="68" min="30" max="150" oninput="calcAll()"><div class="hint">Burdened rate</div></div>
+    </div>
+    <div class="num-row two">
+      <div class="nfield"><label>Permit $</label><input type="number" id="permit" value="900" min="0" max="10000" oninput="calcAll()"><div class="hint">Per municipality</div></div>
+      <div class="nfield"><label>Contingency %</label><input type="number" id="contingency" value="5" min="0" max="25" oninput="calcAll()"><div class="hint">Hidden conditions</div></div>
+    </div>
+  </div>
+
+</div><!-- /left -->
+
+<!-- ===== RIGHT PANEL ===== -->
+<div class="right" id="right-panel">
+
+  <!-- PRINT HEADER -->
+  <div class="print-header" id="print-header" style="display:none">
+    <div>
+      <div class="print-co-name">Your Company <em>Name</em></div>
+      <div class="print-co-sub">License #: _____________ &nbsp;·&nbsp; Phone: _____________ &nbsp;·&nbsp; yourwebsite.com</div>
+    </div>
+    <div class="print-proj">
+      <div><strong id="pp-client">&nbsp;</strong></div>
+      <div id="pp-addr">&nbsp;</div>
+      <div>Date: <strong id="pp-date">&nbsp;</strong> &nbsp;·&nbsp; Est. #<strong id="pp-num">&nbsp;</strong></div>
+    </div>
+  </div>
+
+  <div class="est-lbl">Live Estimate</div>
+
+  <!-- RIGHT PANEL CONTENT — rendered by JS -->
+  <div id="estimate-output">
+    <div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:10px;opacity:.5;line-height:1.8">
+      Select a project type<br>to see the live estimate.
+    </div>
+  </div>
+
+  <!-- PRINT FOOTER -->
+  <div class="print-footer" style="display:none">
+    <div class="sig-block"><div class="sig-label">Contractor signature</div><div class="sig-line">Date: _______________</div></div>
+    <div class="sig-block"><div class="sig-label">Client acceptance</div><div class="sig-line">Date: _______________</div></div>
+  </div>
+
+  <div class="disc" style="display:none" id="disc-text">
+    Midpoint estimate. Fixture allowances depend on owner selections. Sub pricing is all-in installed. ±<span id="r-bandpct">20</span>% band applied to grand total.
+  </div>
+
+</div><!-- /right -->
+</div><!-- /main -->
+  <button class="print-btn" onclick="printEstimate()">Print / Save as PDF</button>
+
+<script>
+// ================================================================
+// GLOBAL STATE
+// ================================================================
+let activeProject = null;   // 'bathroom' | 'kitchen' | 'addition' | 'other' | 'multi'
+let activeMulti   = [];     // array of active project keys for multi mode
+let siteKnown     = false;
+
+// Per-project question state
+const STATE = {
+  bathroom: {
+    demoScope:'none', hazmat:'no',
+    walls:'no', structural:'no', addition:'no',
+    plumbMove:'no', fixtureCount:'full', newFixtures:'none', supply:'keep',
+    elec:'swap', fan:'keep', heat:'no', lighting:'swap', panel:'no',
+    flooringType:'tile', subfloor:'no',
+    anyTile:'no', tileGrade:'mid', tilePan:'no', tileSurround:'no',
+    vanity:'stock', counter:'cultured', toilet:'standard', tubUnit:'keep',
+    hw:'builder', access:'none', enclosure:'curtain',
+    door:'keep', window:'no', trim:'keep'
+  },
+  kitchen: {
+    demoScope:'none', hazmat:'no',
+    walls:'no', structural:'no',
+    plumbMove:'no', newFixtures:'none',
+    elec:'swap', panel:'no', lighting:'swap',
+    flooringType:'lvp', subfloor:'no',
+    tileBacksplash:'none', tileGrade:'mid',
+    cabinets:'stock', counter:'laminate', island:'no',
+    appliances:'basic', venthood:'keep',
+    door:'keep', window:'no', trim:'keep'
+  },
+  addition: {
+    foundation:'slab', footprint:'small',
+    framing:'stick', roofType:'match',
+    windows:'standard', extDoor:'standard',
+    insulation:'standard', drywall:'standard',
+    elec:'basic', plumbing:'none', hvac:'none',
+    flooringType:'lvp', intFinish:'standard'
+  },
+  other: {
+    roomType:'basement',
+    demoScope:'none', hazmat:'no',
+    walls:'no', structural:'no',
+    plumbMove:'no',
+    elec:'swap', panel:'no',
+    flooringType:'lvp', subfloor:'no',
+    anyTile:'no', tileGrade:'mid',
+    drywall:'partial', paint:'standard',
+    door:'keep', window:'no', trim:'keep'
+  }
+};
+
+// ================================================================
+// QUESTION HTML TEMPLATES
+// ================================================================
+
+function bathroomQHTML() {
+  const p = 'bathroom';
+  return `
+<div class="proj-block">
+  <div class="proj-block-hdr bath">
+    <span class="proj-block-icon">🛁</span>
+    <span class="proj-block-name">Bathroom Renovation</span>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-name">Demo</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Demo scope</div><div class="opts">
+        ${opts(p,'demoScope',['none:None / cosmetic','partial:Partial (tile + fixtures)','full:Full gut to studs'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Hazmat / old home risk <span class="sec-tag tag-risk">Risk</span></div><div class="opts">
+        ${opts(p,'hazmat',['no:No / post-1980','possible:Pre-1980 not tested','confirmed:Confirmed hazmat'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-name">Framing</span><span class="sec-tag tag-cost">High $$</span></div>
+    <div class="qgrid three">
+      <div class="qcard"><div class="qlbl">Walls moving or added?</div><div class="opts">
+        ${opts(p,'walls',['no:No change','nonstructural:Non-structural','new:New wall(s)'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Structural changes?</div><div class="opts">
+        ${opts(p,'structural',['no:No','beam:Beam / header','loadbearing:Load-bearing wall'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Sq Ft <span class="sec-tag tag-allow">floor area</span></div>
+        <input type="number" id="sqft-bathroom" value="65" min="20" max="400"
+          style="width:80px;padding:5px 7px;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:12px;background:var(--paper);color:var(--ink);outline:none"
+          oninput="calcAll()">
+        <span style="font-size:10px;color:var(--muted);margin-left:4px">sq ft</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-name">Plumbing</span><span class="sec-tag tag-sub">Sub</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Any plumbing relocating?</div><div class="opts">
+        ${opts(p,'plumbMove',['no:No move','minor:Minor (&lt;2 ft)','major:Major relocation'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Fixture count</div><div class="opts">
+        ${opts(p,'fixtureCount',['half:Half bath','full:Full bath','master:Master / dual'])}
+      </div></div>
+    </div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">New fixtures added?</div><div class="opts">
+        ${opts(p,'newFixtures',['none:None','one:1 new fixture','multi:2+ new fixtures'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Supply line condition</div><div class="opts">
+        ${opts(p,'supply',['keep:Keep / PEX ok','replace:Replace copper','galv:Replace galvanized'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-name">Electrical</span><span class="sec-tag tag-sub">Sub</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Electrical scope</div><div class="opts">
+        ${opts(p,'elec',['swap:Swap fixtures','circuits:Add GFCI / circuits','rewire:Full rewire'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Exhaust fan</div><div class="opts">
+        ${opts(p,'fan',['keep:Keep existing','replace:Replace unit','newduct:New + new duct'])}
+      </div></div>
+    </div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Heated floor</div><div class="opts">
+        ${opts(p,'heat',['no:No','yes:Yes — electric mat'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Lighting</div><div class="opts">
+        ${opts(p,'lighting',['swap:Swap fixtures','recessed:Add recessed','full:Full lighting plan'])}
+      </div></div>
+    </div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">New panel required? <span class="sec-tag tag-cost">$$</span></div><div class="opts">
+        ${opts(p,'panel',['no:No — existing ok','subpanel:Sub-panel','fullpanel:Full panel upgrade'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-name">Flooring</span><span class="sec-tag tag-sub">Sub — installed</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Flooring type</div><div class="opts">
+        ${opts(p,'flooringType',['vinyl:Sheet vinyl','lvp:LVP / LVT','tile:Ceramic / porcelain','stone:Natural stone'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">New subfloor?</div><div class="opts">
+        ${opts(p,'subfloor',['no:No — solid existing','patch:Patch sections','full:Full replacement'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-name">Tile &amp; Waterproofing</span><span class="sec-tag tag-sub">Sub — installed</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Tile being installed?</div><div class="opts">
+        ${opts(p,'anyTile',['no:No tile','yes:Yes'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Tile grade</div><div class="opts">
+        ${opts(p,'tileGrade',['builder:Builder (&lt;$3/sf)','mid:Mid ($3–8/sf)','premium:Premium ($8+/sf)'])}
+      </div></div>
+    </div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Tile shower pan?</div><div class="opts">
+        ${opts(p,'tilePan',['no:No','hotmop:Hot-mop liner','custom:Custom mud-set'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Tile shower / tub surround?</div><div class="opts">
+        ${opts(p,'tileSurround',['no:No','standard:Standard surround','custom:Custom + niche(s)'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-name">Fixtures</span><span class="sec-tag tag-allow">Allowances</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Vanity / cabinetry <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'vanity',['keep:Keep existing','stock:Stock ($400–800)','semi:Semi-custom ($800–2k)','custom:Custom ($2k–5k)'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Countertop <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'counter',['cultured:Cultured marble','quartz:Quartz / granite','marble:Natural marble'])}
+      </div></div>
+    </div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Toilet <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'toilet',['keep:Keep existing','standard:Standard ($200–400)','comfort:Comfort ht. / smart'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Tub / shower base (non-tile) <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'tubUnit',['keep:Keep / N/A','alcove:Alcove tub','prefabshower:Prefab shower base','freestand:Freestanding tub'])}
+      </div></div>
+    </div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Faucets &amp; fixtures <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'hw',['builder:Builder (&lt;$250)','mid:Mid ($250–700)','premium:Premium ($700+)'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Grab bars &amp; accessibility</div><div class="opts">
+        ${opts(p,'access',['none:None','basic:Basic grab bars','ada:Full ADA package'])}
+      </div></div>
+    </div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">Shower enclosure <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'enclosure',['curtain:Curtain rod','framed:Framed glass','semiframe:Semi-frameless','frameless:Frameless glass'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-name">Doors, Windows &amp; Trim</span></div>
+    <div class="qgrid three">
+      <div class="qcard"><div class="qlbl">New door?</div><div class="opts">
+        ${opts(p,'door',['keep:Keep existing','standard:Standard swing','pocket:Pocket door','barn:Barn door'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">New window?</div><div class="opts">
+        ${opts(p,'window',['no:No change','replace:Replace in-kind','new:New opening'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Trim work</div><div class="opts">
+        ${opts(p,'trim',['keep:Keep existing','standard:Standard replace','complex:Complex / custom'])}
+      </div></div>
+    </div>
+  </div>
+</div>`;
+}
+
+function kitchenQHTML() {
+  const p = 'kitchen';
+  return `
+<div class="proj-block">
+  <div class="proj-block-hdr kitchen">
+    <span class="proj-block-icon">🍳</span>
+    <span class="proj-block-name">Kitchen Renovation</span>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-name">Demo</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Demo scope</div><div class="opts">
+        ${opts(p,'demoScope',['none:None / cosmetic','partial:Partial (cabinets + tile)','full:Full gut to studs'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Hazmat / old home risk <span class="sec-tag tag-risk">Risk</span></div><div class="opts">
+        ${opts(p,'hazmat',['no:No / post-1980','possible:Pre-1980 not tested','confirmed:Confirmed hazmat'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-name">Framing / Layout</span><span class="sec-tag tag-cost">High $$</span></div>
+    <div class="qgrid three">
+      <div class="qcard"><div class="qlbl">Layout changes?</div><div class="opts">
+        ${opts(p,'walls',['no:No change','nonstructural:Non-structural move','new:Open concept / new walls'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Structural changes?</div><div class="opts">
+        ${opts(p,'structural',['no:No','beam:Beam / header','loadbearing:Load-bearing wall'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Sq Ft <span class="sec-tag tag-allow">floor area</span></div>
+        <input type="number" id="sqft-kitchen" value="150" min="50" max="600"
+          style="width:80px;padding:5px 7px;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:12px;background:var(--paper);color:var(--ink);outline:none"
+          oninput="calcAll()">
+        <span style="font-size:10px;color:var(--muted);margin-left:4px">sq ft</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-name">Plumbing</span><span class="sec-tag tag-sub">Sub</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Plumbing relocating?</div><div class="opts">
+        ${opts(p,'plumbMove',['no:No move','minor:Minor shift','major:Major relocation'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">New fixtures added?</div><div class="opts">
+        ${opts(p,'newFixtures',['none:None','pot_filler:Pot filler','second_sink:Second sink','both:Both'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-name">Electrical</span><span class="sec-tag tag-sub">Sub</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Electrical scope</div><div class="opts">
+        ${opts(p,'elec',['swap:Swap fixtures','circuits:Add circuits / GFCI','rewire:Full rewire'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Lighting</div><div class="opts">
+        ${opts(p,'lighting',['swap:Swap fixtures','under_cab:Add under-cabinet','recessed:Full recessed plan'])}
+      </div></div>
+    </div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">New panel required? <span class="sec-tag tag-cost">$$</span></div><div class="opts">
+        ${opts(p,'panel',['no:No — existing ok','subpanel:Sub-panel','fullpanel:Full panel upgrade'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-name">Cabinets &amp; Countertops</span><span class="sec-tag tag-allow">Allowances</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Cabinets <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'cabinets',['stock:Stock / RTA ($80–120/lf)','semi:Semi-custom ($120–250/lf)','custom:Custom ($250–600/lf)'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Countertops <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'counter',['laminate:Laminate','quartz:Quartz','granite:Granite','marble:Marble / premium'])}
+      </div></div>
+    </div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">Island / peninsula?</div><div class="opts">
+        ${opts(p,'island',['no:No island','basic:Basic island (no sink/range)','full:Full island (sink or range)'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-name">Appliances</span><span class="sec-tag tag-allow">Allowances</span></div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">Appliance package <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'appliances',['none:Owner-supplied / keep','basic:Basic package ($3k–5k)','mid:Mid-range ($5k–10k)','premium:Premium / pro ($10k–25k)'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-name">Ventilation</span></div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">Range hood / ventilation <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'venthood',['keep:Keep existing','basic:Basic hood ($200–600)','mid:Mid-range hood ($600–1.5k)','custom:Custom / built-in ($1.5k–5k)'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-name">Flooring</span><span class="sec-tag tag-sub">Sub — installed</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Flooring type</div><div class="opts">
+        ${opts(p,'flooringType',['vinyl:Sheet vinyl','lvp:LVP / LVT','tile:Ceramic / porcelain','stone:Natural stone','hardwood:Hardwood'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">New subfloor?</div><div class="opts">
+        ${opts(p,'subfloor',['no:No — solid existing','patch:Patch sections','full:Full replacement'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-name">Tile &amp; Backsplash</span><span class="sec-tag tag-sub">Sub — installed</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Backsplash</div><div class="opts">
+        ${opts(p,'tileBacksplash',['none:No backsplash','basic:Basic tile (3x6 subway)','designer:Designer tile','full_height:Full-height slab'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Tile grade (if applicable)</div><div class="opts">
+        ${opts(p,'tileGrade',['builder:Builder (&lt;$3/sf)','mid:Mid ($3–8/sf)','premium:Premium ($8+/sf)'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">10</span><span class="sec-name">Doors, Windows &amp; Trim</span></div>
+    <div class="qgrid three">
+      <div class="qcard"><div class="qlbl">New door?</div><div class="opts">
+        ${opts(p,'door',['keep:Keep existing','standard:Standard swing','pocket:Pocket door'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">New window?</div><div class="opts">
+        ${opts(p,'window',['no:No change','replace:Replace in-kind','new:New opening'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Trim work</div><div class="opts">
+        ${opts(p,'trim',['keep:Keep existing','standard:Standard replace','complex:Complex / custom'])}
+      </div></div>
+    </div>
+  </div>
+</div>`;
+}
+
+function additionQHTML() {
+  const p = 'addition';
+  return `
+<div class="proj-block">
+  <div class="proj-block-hdr addition">
+    <span class="proj-block-icon">🏗</span>
+    <span class="proj-block-name">Addition</span>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-name">Size &amp; Foundation</span><span class="sec-tag tag-cost">Major cost driver</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Footprint size</div><div class="opts">
+        ${opts(p,'footprint',['small:Small (under 200 sf)','mid:Mid (200–500 sf)','large:Large (500+ sf)'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Foundation type</div><div class="opts">
+        ${opts(p,'foundation',['slab:Slab on grade','crawl:Crawl space','basement:Full basement'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-name">Framing &amp; Structure</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Framing method</div><div class="opts">
+        ${opts(p,'framing',['stick:Stick frame (standard)','engineered:Engineered lumber'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Roof type</div><div class="opts">
+        ${opts(p,'roofType',['match:Match existing','shed:Shed / flat roof','gable:New gable roof'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-name">Windows &amp; Exterior Doors</span><span class="sec-tag tag-allow">Allowances</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Windows <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'windows',['minimal:1–2 windows','standard:3–5 windows','generous:6+ windows'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Exterior door(s) <span class="sec-tag tag-allow">allowance</span></div><div class="opts">
+        ${opts(p,'extDoor',['none:No new exterior door','standard:Standard entry door','sliding:Sliding / French doors'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-name">Insulation &amp; Drywall</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Insulation</div><div class="opts">
+        ${opts(p,'insulation',['standard:Standard batt','spray:Spray foam','premium:Premium / hybrid'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Drywall finish level</div><div class="opts">
+        ${opts(p,'drywall',['standard:Level 4 (standard)','premium:Level 5 (smooth / skim coat)'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-name">Electrical &amp; Plumbing</span><span class="sec-tag tag-sub">Subs</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Electrical rough-in</div><div class="opts">
+        ${opts(p,'elec',['basic:Basic lighting + outlets','full:Full room circuits','heavy:Heavy loads (kitchen/bath)'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Plumbing rough-in</div><div class="opts">
+        ${opts(p,'plumbing',['none:No plumbing','bath:Bathroom rough-in','kitchen:Kitchen rough-in','both:Bath + kitchen'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-name">HVAC</span><span class="sec-tag tag-sub">Sub</span></div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">HVAC extension</div><div class="opts">
+        ${opts(p,'hvac',['none:Extend existing ducts','mini_split:Mini-split unit','full:New zone / full system'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-name">Interior Finishes</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Flooring <span class="sec-tag tag-sub">Sub — installed</span></div><div class="opts">
+        ${opts(p,'flooringType',['lvp:LVP / LVT','hardwood:Hardwood','tile:Tile','carpet:Carpet'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Interior finish level</div><div class="opts">
+        ${opts(p,'intFinish',['standard:Standard (paint + base trim)','upgraded:Upgraded (custom trim + paint)','premium:Premium (full millwork)'])}
+      </div></div>
+    </div>
+  </div>
+</div>`;
+}
+
+function otherQHTML() {
+  const p = 'other';
+  return `
+<div class="proj-block">
+  <div class="proj-block-hdr other">
+    <span class="proj-block-icon">🔧</span>
+    <span class="proj-block-name">Other Renovation</span>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-name">Room Type</span></div>
+    <div class="qgrid one">
+      <div class="qcard"><div class="qlbl">What type of space?</div><div class="opts">
+        ${opts(p,'roomType',['basement:Basement finish','laundry:Laundry room','mudroom:Mudroom','office:Home office','flex:Flex / bonus room'])}
+      </div></div>
+    </div>
+    <div class="qgrid three" style="margin-top:9px">
+      <div class="qcard"><div class="qlbl">Sq Ft <span class="sec-tag tag-allow">floor area</span></div>
+        <input type="number" id="sqft-other" value="200" min="50" max="2000"
+          style="width:80px;padding:5px 7px;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:12px;background:var(--paper);color:var(--ink);outline:none"
+          oninput="calcAll()">
+        <span style="font-size:10px;color:var(--muted);margin-left:4px">sq ft</span>
+      </div>
+      <div class="qcard"><div class="qlbl">Hazmat / old home risk <span class="sec-tag tag-risk">Risk</span></div><div class="opts">
+        ${opts(p,'hazmat',['no:No / post-1980','possible:Pre-1980 not tested','confirmed:Confirmed'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Demo scope</div><div class="opts">
+        ${opts(p,'demoScope',['none:None','partial:Partial','full:Full gut'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-name">Framing</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Wall framing</div><div class="opts">
+        ${opts(p,'walls',['no:No new walls','nonstructural:New partition walls','structural:Structural changes'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Plumbing</div><div class="opts">
+        ${opts(p,'plumbMove',['no:No plumbing','rough_in:New rough-in','relocate:Relocate existing'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-name">Electrical</span><span class="sec-tag tag-sub">Sub</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Electrical scope</div><div class="opts">
+        ${opts(p,'elec',['swap:Swap / add outlets','circuits:New circuits','rewire:Full rough-in'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Panel upgrade?</div><div class="opts">
+        ${opts(p,'panel',['no:No','subpanel:Sub-panel','fullpanel:Full panel'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-name">Flooring</span><span class="sec-tag tag-sub">Sub — installed</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Flooring type</div><div class="opts">
+        ${opts(p,'flooringType',['vinyl:Sheet vinyl','lvp:LVP / LVT','tile:Tile','carpet:Carpet','hardwood:Hardwood'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">New subfloor?</div><div class="opts">
+        ${opts(p,'subfloor',['no:No — solid','patch:Patch','full:Full replacement'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-name">Tile</span><span class="sec-tag tag-sub">Sub — installed</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Any tile?</div><div class="opts">
+        ${opts(p,'anyTile',['no:No tile','yes:Yes'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Tile grade</div><div class="opts">
+        ${opts(p,'tileGrade',['builder:Builder','mid:Mid','premium:Premium'])}
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-name">Walls &amp; Finishes</span></div>
+    <div class="qgrid">
+      <div class="qcard"><div class="qlbl">Drywall scope</div><div class="opts">
+        ${opts(p,'drywall',['patch:Patch only','partial:Partial','full:Full replacement'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Paint</div><div class="opts">
+        ${opts(p,'paint',['standard:Standard 2-coat','full:Full prep + repaint','none:Owner-supplied'])}
+      </div></div>
+    </div>
+    <div class="qgrid three" style="margin-top:9px">
+      <div class="qcard"><div class="qlbl">New door?</div><div class="opts">
+        ${opts(p,'door',['keep:Keep','standard:Standard','pocket:Pocket'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">New window?</div><div class="opts">
+        ${opts(p,'window',['no:No change','replace:Replace','new:New opening'])}
+      </div></div>
+      <div class="qcard"><div class="qlbl">Trim</div><div class="opts">
+        ${opts(p,'trim',['keep:Keep','standard:Standard','complex:Complex'])}
+      </div></div>
+    </div>
+  </div>
+</div>`;
+}
+
+// ================================================================
+// OPTION BUTTON BUILDER
+// ================================================================
+function opts(proj, key, pairs) {
+  return pairs.map((pair, idx) => {
+    const [val, label] = pair.split(':');
+    const isDefault = STATE[proj][key] === val;
+    const cls = isDefault ? ['sA','sB','sC','sD'][Math.min(idx,3)] : '';
+    return `<button class="opt ${cls}" data-proj="${proj}" data-q="${key}" data-v="${val}" onclick="pickOpt(this)">${label}</button>`;
+  }).join('');
+}
+
+// ================================================================
+// PROJECT SELECTION
+// ================================================================
+function selectProject(type) {
+  activeProject = type;
+  // Update tile styles
+  document.querySelectorAll('.ptile').forEach(t => {
+    t.classList.remove('active','multi-active');
+  });
+  const tile = document.getElementById('tile-'+type);
+  if (tile) tile.classList.add(type === 'multi' ? 'multi-active' : 'active');
+
+  // Multi-project checkbox visibility
+  document.getElementById('multi-checks').style.display = type === 'multi' ? 'block' : 'none';
+  if (type !== 'multi') {
+    // single project
+    activeMulti = [];
+    renderQuestions([type]);
+    document.getElementById('site-cond').style.display = 'block';
+    document.getElementById('contractor-numbers').style.display = 'block';
+    document.getElementById('disc-text').style.display = 'block';
+    calcAll();
+  } else {
+    // clear questions until checkboxes selected
+    activeMulti = [];
+    renderQuestions([]);
+    document.getElementById('site-cond').style.display = 'block';
+    document.getElementById('contractor-numbers').style.display = 'block';
+    document.getElementById('disc-text').style.display = 'block';
+  }
+}
+
+function updateMulti() {
+  activeMulti = [];
+  ['bathroom','kitchen','addition','other'].forEach(p => {
+    if (document.getElementById('mc-'+p).checked) activeMulti.push(p);
+  });
+  renderQuestions(activeMulti);
+  calcAll();
+}
+
+function renderQuestions(projects) {
+  const container = document.getElementById('questions-container');
+  if (projects.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">🏠</div><p>Select a project type above<br>to load the estimating questions.</p></div>`;
+    document.getElementById('estimate-output').innerHTML = `<div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:10px;opacity:.5;line-height:1.8">Select a project type<br>to see the live estimate.</div>`;
+    return;
+  }
+  const map = { bathroom: bathroomQHTML, kitchen: kitchenQHTML, addition: additionQHTML, other: otherQHTML };
+  container.innerHTML = projects.map(p => map[p]()).join('<hr style="border:none;border-top:2px dashed var(--border);margin:2rem 0">');
+}
+
+// ================================================================
+// OPTION PICKER
+// ================================================================
+function pickOpt(btn) {
+  const proj = btn.dataset.proj;
+  const q    = btn.dataset.q;
+  const v    = btn.dataset.v;
+  STATE[proj][q] = v;
+  // deactivate siblings in same group
+  document.querySelectorAll(`[data-proj="${proj}"][data-q="${q}"]`).forEach(b => b.className = 'opt');
+  const idx = [...btn.parentNode.children].indexOf(btn);
+  btn.classList.add(['sA','sB','sC','sD'][Math.min(idx,3)]);
+  calcAll();
+}
+
+function setCond(btn, val) {
+  siteKnown = val === 'known';
+  document.querySelectorAll('.copt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cond-note').textContent = siteKnown
+    ? 'Walked estimate: ±15% band — tighter number, more confident quote.'
+    : 'Blind estimate: ±20% band applied. Range narrows once you\'ve walked the job.';
+  calcAll();
+}
+
+// ================================================================
+// FORMAT HELPERS
+// ================================================================
+const fmt  = v => '$' + Math.round(v).toLocaleString();
+const fmtK = v => {
+  if (!v || v === 0) return '—';
+  return v >= 1000 ? '$' + (v/1000).toFixed(1).replace(/\.0$/,'') + 'k' : '$' + Math.round(v);
+};
+function g(id) { const e = document.getElementById(id); return e ? parseFloat(e.value)||0 : 0; }
+
+// ================================================================
+// CALC — BATHROOM
+// ================================================================
+function calcBathroom() {
+  const Q  = STATE.bathroom;
+  const sf = Math.max(20, g('sqft-bathroom') || 65);
+  const rate = g('laborRate') || 68;
+
+  // Labor
+  const demoHrs   = {none:1, partial:7, full:16}[Q.demoScope];
+  const wallHrs   = {no:0, nonstructural:12, new:22}[Q.walls] + {no:0, beam:16, loadbearing:36}[Q.structural];
+  const dwHrs     = {none:4, partial:10, full:sf*.30}[Q.demoScope] + (Q.walls!=='no'?sf*.10:0) + 6;
+  const trimHrs   = {keep:1.5,standard:6,complex:12}[Q.trim] + {keep:0,standard:4,pocket:9,barn:7}[Q.door] + {no:0,replace:4,new:10}[Q.window];
+  const finHrs    = {half:5,full:8,master:13}[Q.fixtureCount] + {none:0,basic:3,ada:7}[Q.access] + {none:0,one:2,multi:5}[Q.newFixtures];
+  const lDemo=demoHrs*rate, lFrame=wallHrs*rate, lDw=dwHrs*rate, lTrim=trimHrs*rate, lFinish=finHrs*rate;
+  const laborTotal = lDemo+lFrame+lDw+lTrim+lFinish;
+
+  // Materials
+  const mDemo   = {none:80,partial:260,full:620}[Q.demoScope];
+  const mFrame  = {no:0,nonstructural:420,new:880}[Q.walls] + {no:0,beam:950,loadbearing:2400}[Q.structural];
+  const mSub    = {no:0,patch:210,full:sf*3.20}[Q.subfloor];
+  const mDw     = {none:sf*.60,partial:sf*1.40,full:sf*2.80}[Q.demoScope];
+  const mDoor   = {keep:0,standard:320,pocket:580,barn:420}[Q.door];
+  const mWin    = {no:0,replace:580,new:1400}[Q.window];
+  const mTrim   = {keep:0,standard:280,complex:680}[Q.trim];
+  const mMisc   = 180+sf*.80;
+  const matTotal= mDemo+mFrame+mSub+mDw+120+mDoor+mWin+mTrim+mMisc;
+
+  // Subs
+  const plumb = {half:1100,full:2200,master:3800}[Q.fixtureCount]
+    + {no:0,minor:1000,major:2900}[Q.plumbMove]
+    + {none:0,one:1300,multi:3000}[Q.newFixtures]
+    + {keep:0,replace:620,galv:1450}[Q.supply];
+  const elec  = {swap:500,circuits:1500,rewire:3600}[Q.elec]
+    + (Q.heat==='yes'?sf*9.50:0)
+    + {keep:0,replace:380,newduct:820}[Q.fan]
+    + {swap:0,recessed:900,full:1950}[Q.lighting];
+  const panel = {no:0,subpanel:1900,fullpanel:4400}[Q.panel];
+  const floorSF = sf*1.10;
+  const floor = floorSF*{vinyl:4.80,lvp:7.50,tile:13.0,stone:23.0}[Q.flooringType];
+  const tileRate = {builder:14,mid:19,premium:28}[Q.tileGrade];
+  const tile  = Q.anyTile==='yes'
+    ? sf*2.0*tileRate + {no:0,hotmop:520,custom:1100}[Q.tilePan]
+    + {no:0,standard:sf*2.0*tileRate,custom:sf*2.5*tileRate+650}[Q.tileSurround] : 0;
+  // avoid double for surround if anyTile yes
+  const surroundTile = Q.anyTile==='yes'
+    ? {no:0,standard:sf*2.0*tileRate,custom:sf*2.5*tileRate+650}[Q.tileSurround] : 0;
+  const panTile = Q.anyTile==='yes' ? {no:0,hotmop:520,custom:1100}[Q.tilePan] : 0;
+  const tileSub = surroundTile + panTile;
+  const hazmat= {no:0,possible:750,confirmed:3400}[Q.hazmat];
+  const subTotal = plumb+elec+panel+floor+tileSub+hazmat;
+
+  // Allowances
+  const aVan  = {keep:0,stock:580,semi:1400,custom:3500}[Q.vanity];
+  const aCnt  = Q.vanity==='keep'?0:{cultured:200,quartz:550,marble:1600}[Q.counter];
+  const aToil = {keep:0,standard:290,comfort:820}[Q.toilet];
+  const aTub  = {keep:0,alcove:820,prefabshower:420,freestand:2400}[Q.tubUnit];
+  const aHW   = {builder:220,mid:480,premium:1200}[Q.hw];
+  const aEnc  = {curtain:55,framed:750,semiframe:1150,frameless:1900}[Q.enclosure];
+  const aAcc  = {none:0,basic:360,ada:1500}[Q.access];
+  const allowTotal = aVan+aCnt+aToil+aTub+aHW+aEnc+aAcc;
+
+  return {
+    sf, laborTotal, matTotal, subTotal, allowTotal,
+    lines: {
+      labor: { 'Demo + rough': lDemo, 'Framing / carpentry': lFrame, 'Drywall + paint': lDw, 'Trim + doors': lTrim, 'Fixture install': lFinish },
+      materials: { 'Demo / dumpster': mDemo, 'Framing material': mFrame||0, 'Subfloor': mSub||0, 'Drywall / cement board': mDw, 'Paint + sundries': 120, 'Door(s)': mDoor||0, 'Window': mWin||0, 'Trim material': mTrim||0, 'Misc / supplies': mMisc },
+      subs: { 'Plumbing (sub)': plumb, 'Electrical (sub)': elec, 'Panel upgrade': panel||0, 'Flooring — installed (sub)': floor, 'Tile work — installed (sub)': tileSub||0, 'Hazmat / abatement': hazmat||0 },
+      allowances: { 'Vanity / cabinetry': aVan||0, 'Countertop': aCnt||0, 'Toilet': aToil||0, 'Tub / shower unit': aTub||0, 'Faucets & fixtures': aHW, 'Shower enclosure': aEnc, 'Accessibility / ADA': aAcc||0 }
+    }
+  };
+}
+
+// ================================================================
+// CALC — KITCHEN
+// ================================================================
+function calcKitchen() {
+  const Q  = STATE.kitchen;
+  const sf = Math.max(50, g('sqft-kitchen') || 150);
+  const rate = g('laborRate') || 68;
+  const cabinetLF = Math.round(sf / 4.5); // estimate linear feet from sq footage
+
+  const demoHrs = {none:2,partial:10,full:22}[Q.demoScope];
+  const wallHrs = {no:0,nonstructural:16,new:28}[Q.walls] + {no:0,beam:18,loadbearing:40}[Q.structural];
+  const dwHrs   = {none:5,partial:12,full:sf*.28}[Q.demoScope] + 8;
+  const trimHrs = {keep:2,standard:7,complex:14}[Q.trim] + {keep:0,standard:4,pocket:8}[Q.door] + {no:0,replace:5,new:12}[Q.window];
+  const finHrs  = 10 + {none:0,pot_filler:2,second_sink:4,both:6}[Q.newFixtures];
+  const lDemo=demoHrs*rate, lFrame=wallHrs*rate, lDw=dwHrs*rate, lTrim=trimHrs*rate, lFinish=finHrs*rate;
+  const laborTotal=lDemo+lFrame+lDw+lTrim+lFinish;
+
+  const mDemo  = {none:100,partial:380,full:820}[Q.demoScope];
+  const mFrame = {no:0,nonstructural:550,new:1200}[Q.walls] + {no:0,beam:1100,loadbearing:3000}[Q.structural];
+  const mSub   = {no:0,patch:280,full:sf*3.20}[Q.subfloor];
+  const mDw    = {none:sf*.70,partial:sf*1.50,full:sf*2.90}[Q.demoScope];
+  const mDoor  = {keep:0,standard:320,pocket:580}[Q.door];
+  const mWin   = {no:0,replace:680,new:1600}[Q.window];
+  const mTrim  = {keep:0,standard:340,complex:820}[Q.trim];
+  const mMisc  = 250+sf*1.20;
+  const matTotal=mDemo+mFrame+mSub+mDw+150+mDoor+mWin+mTrim+mMisc;
+
+  const plumb = 1800 + {no:0,minor:900,major:2400}[Q.plumbMove] + {none:0,pot_filler:600,second_sink:1400,both:2000}[Q.newFixtures];
+  const elec  = {swap:600,circuits:1800,rewire:4200}[Q.elec] + {swap:0,under_cab:650,recessed:1600}[Q.lighting];
+  const panel = {no:0,subpanel:1900,fullpanel:4400}[Q.panel];
+  const floor = sf*1.05*{vinyl:4.80,lvp:7.50,tile:13.0,stone:23.0,hardwood:11.0}[Q.flooringType];
+  const tileRate = {builder:14,mid:19,premium:28}[Q.tileGrade];
+  // backsplash area: assume 30lf * 18in height = 45sf, scaled
+  const bsSF = cabinetLF * 1.5;
+  const bsTile = {none:0,basic:bsSF*tileRate*.7,designer:bsSF*tileRate,full_height:bsSF*tileRate*2.2}[Q.tileBacksplash];
+  const hazmat= {no:0,possible:850,confirmed:3600}[Q.hazmat];
+  const subTotal=plumb+elec+panel+floor+bsTile+hazmat;
+
+  // Allowances
+  const cabCostPerLF = {stock:95,semi:185,custom:420}[Q.cabinets];
+  const aCab  = cabinetLF * cabCostPerLF;
+  const cntPerSF = {laminate:28,quartz:65,granite:72,marble:110}[Q.counter];
+  const aCnt  = sf * 0.40 * cntPerSF; // counter area ~40% of room SF
+  const aIsl  = {no:0,basic:2800,full:5500}[Q.island];
+  const aApp  = {none:0,basic:4000,mid:7500,premium:17000}[Q.appliances];
+  const aHood = {keep:0,basic:450,mid:1000,custom:3000}[Q.venthood];
+  const allowTotal=aCab+aCnt+aIsl+aApp+aHood;
+
+  return {
+    sf, laborTotal, matTotal, subTotal, allowTotal,
+    lines: {
+      labor: { 'Demo + rough': lDemo, 'Framing / layout': lFrame||0, 'Drywall + paint': lDw, 'Trim + doors': lTrim, 'Fixture install': lFinish },
+      materials: { 'Demo / dumpster': mDemo, 'Framing material': mFrame||0, 'Subfloor': mSub||0, 'Drywall / plaster': mDw, 'Paint + sundries': 150, 'Door(s)': mDoor||0, 'Window': mWin||0, 'Trim material': mTrim||0, 'Misc / supplies': mMisc },
+      subs: { 'Plumbing (sub)': plumb, 'Electrical (sub)': elec, 'Panel upgrade': panel||0, 'Flooring — installed (sub)': floor, 'Backsplash tile — installed (sub)': bsTile||0, 'Hazmat / abatement': hazmat||0 },
+      allowances: { [`Cabinets (${cabinetLF} lf)`]: aCab, 'Countertops': aCnt, 'Island / peninsula': aIsl||0, 'Appliances': aApp||0, 'Range hood / ventilation': aHood||0 }
+    }
+  };
+}
+
+// ================================================================
+// CALC — ADDITION
+// ================================================================
+function calcAddition() {
+  const Q = STATE.addition;
+  const sfMap = {small:160, mid:350, large:650};
+  const sf = sfMap[Q.footprint];
+
+  const foundCost = {slab:sf*18, crawl:sf*26, basement:sf*48}[Q.foundation];
+  const frameCost = sf * ({stick:28, engineered:38}[Q.framing]);
+  const roofCost  = sf * ({match:18, shed:12, gable:22}[Q.roofType]);
+  const winCost   = {minimal:sf*8, standard:sf*14, generous:sf*22}[Q.windows];
+  const extDoor   = {none:0, standard:1800, sliding:4200}[Q.extDoor];
+  const insCost   = sf * {standard:4.50, spray:8.50, premium:11}[Q.insulation];
+  const dwCost    = sf * {standard:4.20, premium:6.50}[Q.drywall];
+  const elecCost  = sf * {basic:14, full:22, heavy:34}[Q.elec];
+  const plumbCost = {none:0, bath:8500, kitchen:6500, both:14000}[Q.plumbing];
+  const hvacCost  = sf * {none:8, mini_split:18, full:28}[Q.hvac];
+  const floorCost = sf * {lvp:7.50, hardwood:12, tile:14, carpet:5}[Q.flooringType];
+  const finCost   = sf * {standard:12, upgraded:20, premium:32}[Q.intFinish];
+
+  const subtotal = foundCost+frameCost+roofCost+insCost+dwCost+elecCost+plumbCost+hvacCost+floorCost+finCost;
+
+  return {
+    sf,
+    laborTotal: subtotal * 0.35,
+    matTotal: subtotal * 0.40,
+    subTotal: subtotal * 0.25,
+    allowTotal: winCost + extDoor,
+    lines: {
+      labor: { 'Framing labor': frameCost*.55, 'Drywall + finish labor': dwCost*.45, 'Flooring install': floorCost*.40, 'Interior finish labor': finCost*.45 },
+      materials: { 'Foundation': foundCost, 'Framing lumber': frameCost*.45, 'Roofing': roofCost, 'Insulation': insCost, 'Drywall': dwCost*.55, 'Interior finishes': finCost*.55 },
+      subs: { 'Electrical rough-in (sub)': elecCost, 'Plumbing rough-in (sub)': plumbCost||0, 'HVAC (sub)': hvacCost, 'Flooring installed (sub)': floorCost*.60 },
+      allowances: { 'Windows': winCost, 'Exterior door(s)': extDoor||0 }
+    }
+  };
+}
+
+// ================================================================
+// CALC — OTHER
+// ================================================================
+function calcOther() {
+  const Q  = STATE.other;
+  const sf = Math.max(50, g('sqft-other') || 200);
+  const rate = g('laborRate') || 68;
+
+  const baseMultiplier = {basement:1.0, laundry:0.75, mudroom:0.70, office:0.80, flex:0.85}[Q.roomType];
+
+  const demoHrs  = {none:1,partial:sf*.05,full:sf*.12}[Q.demoScope] * baseMultiplier;
+  const wallHrs  = {no:0,nonstructural:sf*.08,structural:sf*.15}[Q.walls];
+  const plumbHrs = {no:0,rough_in:12,relocate:20}[Q.plumbMove];
+  const dwHrs    = {patch:6,partial:sf*.18,full:sf*.30}[Q.drywall];
+  const paintHrs = {standard:sf*.08,full:sf*.14,none:0}[Q.paint];
+  const trimHrs  = {keep:1.5,standard:6,complex:12}[Q.trim] + {keep:0,standard:4,pocket:9}[Q.door] + {no:0,replace:4,new:10}[Q.window];
+  const laborTotal = (demoHrs+wallHrs+plumbHrs+dwHrs+paintHrs+trimHrs)*rate;
+
+  const mDemo  = {none:60,partial:sf*1.2,full:sf*2.8}[Q.demoScope];
+  const mDw    = {patch:sf*.60,partial:sf*1.40,full:sf*2.80}[Q.drywall];
+  const mDoor  = {keep:0,standard:320,pocket:580}[Q.door];
+  const mWin   = {no:0,replace:580,new:1400}[Q.window];
+  const mTrim  = {keep:0,standard:280,complex:680}[Q.trim];
+  const mMisc  = 100+sf*.60;
+  const mPaint = {standard:sf*.60,full:sf*1.0,none:0}[Q.paint];
+  const matTotal=mDemo+mDw+mDoor+mWin+mTrim+mMisc+mPaint;
+
+  const elec   = sf*{swap:4,circuits:10,rewire:18}[Q.elec];
+  const panel  = {no:0,subpanel:1900,fullpanel:4400}[Q.panel];
+  const plumb  = {no:0,rough_in:3200,relocate:4800}[Q.plumbMove];
+  const floor  = sf*1.05*{vinyl:4.80,lvp:7.50,tile:13.0,carpet:4.5,hardwood:11.0}[Q.flooringType];
+  const tileRate={builder:14,mid:19,premium:28}[Q.tileGrade];
+  const tileSub = Q.anyTile==='yes' ? sf*0.5*tileRate : 0;
+  const hazmat = {no:0,possible:750,confirmed:3400}[Q.hazmat];
+  const subTotal=elec+panel+plumb+floor+tileSub+hazmat;
+
+  return {
+    sf, laborTotal, matTotal, subTotal, allowTotal:0,
+    lines: {
+      labor: { 'Demo + rough': demoHrs*rate, 'Wall framing': wallHrs*rate||0, 'Plumbing rough': plumbHrs*rate||0, 'Drywall + paint': (dwHrs+paintHrs)*rate, 'Trim + doors': trimHrs*rate },
+      materials: { 'Demo / dumpster': mDemo, 'Drywall': mDw, 'Paint + sundries': mPaint, 'Door(s)': mDoor||0, 'Window': mWin||0, 'Trim material': mTrim||0, 'Misc / supplies': mMisc },
+      subs: { 'Electrical (sub)': elec, 'Panel upgrade': panel||0, 'Plumbing (sub)': plumb||0, 'Flooring — installed (sub)': floor, 'Tile work — installed (sub)': tileSub||0, 'Hazmat / abatement': hazmat||0 },
+      allowances: {}
+    }
+  };
+}
+
+// ================================================================
+// RENDER ESTIMATE PANEL
+// ================================================================
+function renderEstimate(results) {
+  const ohPct   = g('overhead')/100 || .18;
+  const prPct   = g('profit')/100   || .12;
+  const permit  = g('permit')       || 900;
+  const contPct = g('contingency')/100 || .05;
+  const band    = siteKnown ? 0.15 : 0.20;
+
+  let projects = Object.keys(results);
+  let grandDirect = 0;
+  let projectCards = '';
+
+  for (const pkey of projects) {
+    const r = results[pkey];
+    const directBase = r.laborTotal + r.matTotal + r.subTotal + r.allowTotal + (permit / projects.length);
+    const contingency = directBase * contPct;
+    const direct = directBase + contingency;
+    grandDirect += direct;
+
+    const colorClass = pkey;
+    const icons = {bathroom:'🛁', kitchen:'🍳', addition:'🏗', other:'🔧'};
+    const names = {bathroom:'Bathroom', kitchen:'Kitchen', addition:'Addition', other:'Other Renovation'};
+
+    // Build breakdown lines
+    function lineSection(title, lines, isAllow) {
+      const filtered = Object.entries(lines).filter(([,v]) => v > 0);
+      if (!filtered.length) return '';
+      return `<div class="bk-sec">
+        <div class="bk-hd">${title}</div>
+        ${filtered.map(([name, val]) => `
+          <div class="bk-line${isAllow?' bk-allow':''}">
+            <span class="bk-n">${name}</span>
+            <span class="bk-v">${fmtK(val)}</span>
+          </div>`).join('')}
+        <div class="bk-sub">
+          <span class="bk-n">${title} subtotal</span>
+          <span class="bk-v">${fmt(filtered.reduce((s,[,v])=>s+v,0))}</span>
+        </div>
+      </div>`;
+    }
+
+    const hasAllow = Object.values(r.lines.allowances).some(v=>v>0);
+
+    projectCards += `
+<div class="proj-card">
+  <div class="proj-card-hdr ${colorClass}" onclick="toggleCard(this)">
+    <span class="pch-name">${icons[pkey]} ${names[pkey]}</span>
+    <span class="pch-total">${fmt(direct)}</span>
+    <span class="pch-chevron open">▾</span>
+  </div>
+  <div class="proj-card-body open">
+    ${lineSection('In-House Labor', r.lines.labor, false)}
+    ${lineSection('Materials', r.lines.materials, false)}
+    ${lineSection('Subcontractors', r.lines.subs, false)}
+    ${hasAllow ? lineSection('Fixture Allowances', r.lines.allowances, true) : ''}
+    <div class="bk-sec">
+      <div class="bk-hd">Project costs</div>
+      <div class="bk-line"><span class="bk-n">Permit (share)</span><span class="bk-v">${fmt(permit/projects.length)}</span></div>
+      <div class="bk-line"><span class="bk-n">Contingency ${Math.round(contPct*100)}%</span><span class="bk-v">${fmtK(directBase*contPct)}</span></div>
+    </div>
+  </div>
+</div>`;
+  }
+
+  // Grand totals
+  const ohAmt    = grandDirect * ohPct;
+  const profitAmt= (grandDirect + ohAmt) * prPct;
+  const ohpTotal = ohAmt + profitAmt;
+  const grandMid = grandDirect + ohpTotal;
+  const grandLo  = grandMid * (1-band);
+  const grandHi  = grandMid * (1+band);
+  const ohpCombined = Math.round((ohPct+prPct)*100);
+
+  document.getElementById('estimate-output').innerHTML = `
+    ${projectCards}
+    <hr class="divider-line">
+    <div class="mk-line ohp">
+      <span>OH&amp;P (${ohpCombined}% combined)</span>
+      <span>${fmt(ohpTotal)}</span>
+    </div>
+    <div class="grand-block">
+      <div class="gb-label">Total project estimate</div>
+      <div class="gb-val">${fmt(grandMid)}</div>
+      <div class="gb-range">Range: ${fmt(grandLo)} – ${fmt(grandHi)}</div>
+    </div>
+    <div class="cx-wrap">
+      <div class="cx-lbl">Overall complexity</div>
+      <div class="cx-bar">
+        ${[1,2,3,4,5].map(i=>`<div class="cx-seg" id="cx${i}"></div>`).join('')}
+      </div>
+      <div class="cx-v" id="cx-val">—</div>
+    </div>
+  `;
+
+  // Update band display
+  const bd = document.getElementById('r-bandpct');
+  if (bd) bd.textContent = band*100;
+
+  // Complexity
+  let score = projects.length;
+  for (const pkey of projects) {
+    const Q = STATE[pkey];
+    if (Q.structural && Q.structural!=='no') score++;
+    if (Q.plumbMove && Q.plumbMove!=='no') score++;
+    if (Q.hazmat && Q.hazmat!=='no') score++;
+  }
+  score = Math.min(Math.max(score,1), 5);
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('cx'+i);
+    if(el) el.className='cx-seg'+(i<=score?' on':'')+(score>=4&&i<=score?' hi':'');
+  }
+  const lbl=document.getElementById('cx-val');
+  if(lbl) lbl.textContent=['','Low','Moderate','Mid-high','High','Very High'][score];
+}
+
+function toggleCard(hdr) {
+  const body = hdr.nextElementSibling;
+  const chev = hdr.querySelector('.pch-chevron');
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+// ================================================================
+// MAIN CALC DISPATCHER
+// ================================================================
+function calcAll() {
+  const projects = activeProject === 'multi' ? activeMulti : (activeProject ? [activeProject] : []);
+  if (!projects.length) return;
+
+  const results = {};
+  for (const p of projects) {
+    if (p === 'bathroom')  results.bathroom  = calcBathroom();
+    if (p === 'kitchen')   results.kitchen   = calcKitchen();
+    if (p === 'addition')  results.addition  = calcAddition();
+    if (p === 'other')     results.other     = calcOther();
+  }
+  renderEstimate(results);
+}
+
+// ================================================================
+// PRINT
+// ================================================================
+function printEstimate() {
+  const client = document.getElementById('clientName').value || 'Client Name';
+  const addr   = document.getElementById('addr').value || '';
+  const date   = document.getElementById('estDate').value || '';
+  const num    = document.getElementById('estNum').value || '';
+
+  document.getElementById('pp-client').textContent = client;
+  document.getElementById('pp-addr').textContent   = addr;
+  document.getElementById('pp-date').textContent   = date;
+  document.getElementById('pp-num').textContent    = num;
+
+  const hdr = document.getElementById('print-header');
+  const ftr = document.querySelector('.print-footer');
+  hdr.style.display = 'flex';
+  ftr.style.display = 'flex';
+  window.print();
+  hdr.style.display = 'none';
+  ftr.style.display = 'none';
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.getElementById('estDate').value = new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+</script>
+</body>
+</html>
