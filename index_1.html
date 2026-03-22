@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Estimating Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#17150e;
+  --paper:#f6f4ec;
+  --paper2:#edeade;
+  --paper3:#e2dfd0;
+  --gold:#b48c28;
+  --gold-lt:#f3e6bc;
+  --rust:#983a1b;
+  --rust-lt:#f3ddd4;
+  --teal:#196060;
+  --teal-lt:#d0ecec;
+  --muted:#696650;
+  --border:rgba(23,21,14,.13);
+  --r:6px;
+}
+
+body{
+  font-family:'DM Mono',monospace;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* HEADER */
+.hdr{
+  background:var(--ink);
+  color:var(--paper);
+  padding:2.5rem 3rem 2rem;
+  position:relative;
+  overflow:hidden;
+}
+.hdr::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(55deg,transparent,transparent 8px,rgba(180,140,40,.07) 8px,rgba(180,140,40,.07) 9px);
+  pointer-events:none;
+}
+.hdr-inner{max-width:800px;margin:0 auto;position:relative;z-index:1}
+.hdr-eye{font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.hdr h1{font-family:'Fraunces',serif;font-size:38px;font-weight:300;line-height:1.15;margin-bottom:8px}
+.hdr h1 em{font-style:italic;color:var(--gold)}
+.hdr-sub{font-size:11px;color:rgba(246,244,236,.4);letter-spacing:.05em;line-height:1.7}
+
+/* MAIN */
+.main{flex:1;padding:3rem;max-width:800px;margin:0 auto;width:100%}
+
+.section-label{
+  font-size:9px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:1.25rem;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+
+/* TOOL CARDS */
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:2.5rem}
+
+.tool-card{
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  background:var(--paper);
+  overflow:hidden;
+  text-decoration:none;
+  color:inherit;
+  transition:all .18s;
+  display:flex;
+  flex-direction:column;
+}
+.tool-card:hover{
+  border-color:var(--gold);
+  transform:translateY(-2px);
+  box-shadow:0 6px 24px rgba(23,21,14,.08);
+}
+
+.tc-top{
+  padding:1.5rem 1.5rem 1rem;
+  border-bottom:1px solid var(--border);
+  flex:1;
+}
+.tc-icon{
+  font-size:28px;
+  margin-bottom:.75rem;
+  display:block;
+  line-height:1;
+}
+.tc-name{
+  font-family:'Fraunces',serif;
+  font-size:19px;
+  font-weight:300;
+  margin-bottom:6px;
+  line-height:1.2;
+}
+.tc-name em{font-style:italic;color:var(--gold)}
+.tc-desc{
+  font-size:10px;
+  color:var(--muted);
+  line-height:1.75;
+}
+
+.tc-tags{
+  padding:.75rem 1.5rem;
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  background:var(--paper2);
+}
+.tc-tag{
+  font-size:8px;
+  padding:2px 6px;
+  border-radius:2px;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.tc-tag.gold{background:var(--gold-lt);color:var(--gold)}
+.tc-tag.teal{background:var(--teal-lt);color:var(--teal)}
+.tc-tag.rust{background:var(--rust-lt);color:var(--rust)}
+
+.tc-footer{
+  padding:.85rem 1.5rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:var(--paper3);
+  font-size:10px;
+}
+.tc-open{
+  font-size:10px;
+  color:var(--gold);
+  letter-spacing:.06em;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.tc-open::after{content:'→';transition:transform .15s}
+.tool-card:hover .tc-open::after{transform:translateX(3px)}
+.tc-version{font-size:9px;color:var(--muted);opacity:.6}
+
+/* COMING SOON CARD */
+.tool-card.soon{opacity:.55;pointer-events:none;cursor:default}
+.tool-card.soon:hover{transform:none;box-shadow:none;border-color:var(--border)}
+.soon-badge{
+  font-size:8px;
+  padding:2px 7px;
+  border-radius:2px;
+  background:var(--paper3);
+  color:var(--muted);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+/* INFO STRIP */
+.info-strip{
+  background:var(--paper2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1rem 1.25rem;
+  display:flex;
+  gap:2rem;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.info-item{display:flex;align-items:center;gap:8px}
+.info-dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--gold);
+  flex-shrink:0;
+}
+.info-text{font-size:10px;color:var(--muted);line-height:1.6}
+
+/* FOOTER */
+.footer{
+  padding:1.5rem 3rem;
+  border-top:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:.5rem;
+}
+.footer-left{font-size:9px;color:var(--muted);opacity:.6;letter-spacing:.04em}
+.footer-right{font-size:9px;color:var(--muted);opacity:.5}
+
+@media(max-width:600px){
+  .hdr{padding:1.75rem 1.5rem}
+  .main{padding:1.5rem}
+  .tool-grid{grid-template-columns:1fr}
+  .footer{padding:1rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-eye">Field Estimating Tools</div>
+    <h1>Renovation<br><em>Estimator Suite</em></h1>
+    <div class="hdr-sub">
+      2024 pricing · NE/Mid-Atlantic US baseline · Built for small GC teams
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="section-label">Available tools</div>
+
+  <div class="tool-grid">
+
+    <!-- BATHROOM ESTIMATOR -->
+    <a class="tool-card" href="bathroom_estimator.html">
+      <div class="tc-top">
+        <span class="tc-icon">🛁</span>
+        <div class="tc-name">Bathroom<br><em>Estimator</em></div>
+        <div class="tc-desc">
+          Full bathroom renovation estimator with 8 categories, fixture allowances, subcontractor pricing, and a print-ready estimate breakdown.
+        </div>
+      </div>
+      <div class="tc-tags">
+        <span class="tc-tag gold">Allowances</span>
+        <span class="tc-tag teal">Sub pricing</span>
+        <span class="tc-tag rust">Print-ready</span>
+      </div>
+      <div class="tc-footer">
+        <span class="tc-open">Open estimator</span>
+        <span class="tc-version">v4</span>
+      </div>
+    </a>
+
+    <!-- MULTI-PROJECT ESTIMATOR -->
+    <a class="tool-card" href="renovation_estimator.html">
+      <div class="tc-top">
+        <span class="tc-icon">📋</span>
+        <div class="tc-name">Renovation<br><em>Estimator</em></div>
+        <div class="tc-desc">
+          Dynamic multi-project estimator covering bathroom, kitchen, addition, and other renovations. Combine projects for a single consolidated estimate.
+        </div>
+      </div>
+      <div class="tc-tags">
+        <span class="tc-tag gold">Multi-project</span>
+        <span class="tc-tag teal">4 project types</span>
+        <span class="tc-tag rust">Print-ready</span>
+      </div>
+      <div class="tc-footer">
+        <span class="tc-open">Open estimator</span>
+        <span class="tc-version">v1</span>
+      </div>
+    </a>
+
+    <!-- COMING SOON: EXTERIOR -->
+    <div class="tool-card soon">
+      <div class="tc-top">
+        <span class="tc-icon">🏠</span>
+        <div class="tc-name">Exterior<br><em>Estimator</em></div>
+        <div class="tc-desc">
+          Siding, roofing, windows, decks, and exterior renovations. Coming soon.
+        </div>
+      </div>
+      <div class="tc-tags">
+        <span class="tc-tag gold">Roofing</span>
+        <span class="tc-tag teal">Siding</span>
+        <span class="tc-tag rust">Decks</span>
+      </div>
+      <div class="tc-footer">
+        <span class="soon-badge">Coming soon</span>
+        <span class="tc-version">—</span>
+      </div>
+    </div>
+
+    <!-- COMING SOON: WHOLE HOME -->
+    <div class="tool-card soon">
+      <div class="tc-top">
+        <span class="tc-icon">🏡</span>
+        <div class="tc-name">Whole Home<br><em>Estimator</em></div>
+        <div class="tc-desc">
+          Full-house renovation scope with room-by-room breakdown and a combined project summary. Coming soon.
+        </div>
+      </div>
+      <div class="tc-tags">
+        <span class="tc-tag gold">Multi-room</span>
+        <span class="tc-tag teal">Full scope</span>
+        <span class="tc-tag rust">Summary report</span>
+      </div>
+      <div class="tc-footer">
+        <span class="soon-badge">Coming soon</span>
+        <span class="tc-version">—</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="info-strip">
+    <div class="info-item">
+      <div class="info-dot"></div>
+      <div class="info-text">All estimates use 2024 NE/Mid-Atlantic benchmarks.<br>Adjust overhead, profit, and labor rate to match your market.</div>
+    </div>
+    <div class="info-item">
+      <div class="info-dot"></div>
+      <div class="info-text">Fixture allowances reflect mid-range owner selections.<br>Subcontractor pricing is all-in installed cost.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-left">Field Estimating Tools · 2024 · For internal use by licensed contractors</div>
+  <div class="footer-right">Not a substitute for a formal written contract</div>
+</div>
+
+</body>
+</html>
