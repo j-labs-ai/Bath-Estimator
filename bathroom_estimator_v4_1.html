@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bathroom Renovation Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#17150e;
+  --paper:#f6f4ec;
+  --paper2:#edeade;
+  --paper3:#e2dfd0;
+  --gold:#b48c28;
+  --gold-lt:#f3e6bc;
+  --rust:#983a1b;
+  --rust-lt:#f3ddd4;
+  --teal:#196060;
+  --teal-lt:#d0ecec;
+  --muted:#696650;
+  --border:rgba(23,21,14,.13);
+  --r:4px;
+}
+body{font-family:'DM Mono',monospace;background:var(--paper);color:var(--ink);min-height:100vh}
+
+.hdr{background:var(--ink);color:var(--paper);padding:1.6rem 2.5rem 1.4rem;display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;position:relative;overflow:hidden}
+.hdr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(55deg,transparent,transparent 8px,rgba(180,140,40,.08) 8px,rgba(180,140,40,.08) 9px);pointer-events:none}
+.hdr-eye{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.hdr h1{font-family:'Fraunces',serif;font-size:26px;font-weight:300;line-height:1.2}
+.hdr h1 em{font-style:italic;color:var(--gold)}
+.hdr-meta{font-size:9px;color:rgba(246,244,236,.35);margin-top:4px;letter-spacing:.05em}
+.hdr-tagline{font-size:10px;color:rgba(246,244,236,.4);line-height:1.75;text-align:right;max-width:190px}
+
+.info-band{background:var(--paper3);border-bottom:1px solid var(--border);padding:.65rem 2.5rem;display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap}
+.ifield{display:flex;align-items:center;gap:7px}
+.ilbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.iinput{border:none;background:transparent;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);outline:none;border-bottom:1px solid var(--border);padding:2px 3px;width:150px;transition:border-color .15s}
+.iinput:focus{border-color:var(--gold)}
+.iinput.sm{width:72px}
+
+.main{display:grid;grid-template-columns:1fr 324px;min-height:calc(100vh - 100px)}
+.left{padding:1.75rem 2.5rem 3rem;border-right:1px solid var(--border)}
+.right{background:var(--paper2);padding:1.5rem 1.4rem;position:sticky;top:0;height:100vh;overflow-y:auto}
+
+.sec{margin-top:1.75rem}
+.sec:first-child{margin-top:0}
+.sec-hdr{display:flex;align-items:center;gap:8px;padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:.9rem}
+.sec-num{font-size:8px;letter-spacing:.15em;color:var(--muted)}
+.sec-name{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.sec-tag{font-size:8px;padding:1px 5px;border-radius:2px;letter-spacing:.04em}
+.tag-cost{background:var(--rust-lt);color:var(--rust)}
+.tag-risk{background:var(--gold-lt);color:var(--gold)}
+.tag-sub{background:var(--teal-lt);color:var(--teal)}
+.tag-allow{background:var(--gold-lt);color:var(--gold)}
+
+.qgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qgrid.three{grid-template-columns:1fr 1fr 1fr}
+.qgrid.one{grid-template-columns:1fr}
+.qgrid+.qgrid{margin-top:9px}
+
+.qcard{border:1px solid var(--border);border-radius:var(--r);padding:9px 10px;background:var(--paper)}
+.qlbl{font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;line-height:1.5;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.opts{display:flex;gap:5px;flex-wrap:wrap}
+.opt{font-family:'DM Mono',monospace;font-size:9.5px;padding:4px 8px;border:1px solid var(--border);border-radius:2px;cursor:pointer;background:var(--paper2);color:var(--muted);transition:all .11s;letter-spacing:.02em;line-height:1}
+.opt:hover{border-color:var(--ink);color:var(--ink)}
+.opt.sA{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.opt.sB{background:var(--gold);color:#fff;border-color:var(--gold)}
+.opt.sC{background:var(--rust);color:#fff;border-color:var(--rust)}
+.opt.sD{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+.cond{border:1px solid var(--gold);border-radius:var(--r);padding:9px 11px;background:var(--gold-lt);margin-bottom:1.1rem}
+.cond-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.cond-opts{display:flex;gap:6px}
+.copt{font-family:'DM Mono',monospace;font-size:9.5px;padding:5px 10px;border:1px solid rgba(180,140,40,.4);border-radius:2px;cursor:pointer;background:transparent;color:var(--gold);transition:all .12s}
+.copt:hover,.copt.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.cond-note{font-size:9px;color:var(--gold);margin-top:5px;line-height:1.55;opacity:.8}
+
+.num-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:.9rem}
+.num-row.two{grid-template-columns:1fr 1fr}
+.nfield label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.nfield input{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:12px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .15s}
+.nfield input:focus{border-color:var(--gold)}
+.nfield .hint{font-size:9px;color:var(--muted);margin-top:2px}
+
+/* ---- RIGHT PANEL ---- */
+.est-lbl{font-family:'Fraunces',serif;font-size:14px;font-weight:300;color:var(--muted);margin-bottom:.9rem}
+
+.bignum{background:var(--ink);border-radius:var(--r);padding:14px 16px;margin-bottom:.9rem}
+.bn-eyebrow{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:rgba(246,244,236,.38);margin-bottom:2px}
+.bn-val{font-family:'Fraunces',serif;font-size:32px;font-weight:300;color:var(--gold);line-height:1.05}
+.bn-range{font-size:9.5px;color:rgba(246,244,236,.35);margin-top:2px}
+.bn-psf{font-size:9px;color:rgba(246,244,236,.28);margin-top:1px}
+
+/* Breakdown sections */
+.bk-sec{margin-bottom:.8rem}
+.bk-hd{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding-bottom:3px;border-bottom:1px solid var(--border);margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.bk-hd-tag{font-size:7px;padding:1px 4px;border-radius:2px;letter-spacing:.05em}
+.bk-line{display:flex;justify-content:space-between;align-items:baseline;padding:2.5px 0;border-bottom:1px dotted var(--border);font-size:10px}
+.bk-line:last-child{border-bottom:none}
+.bk-n{color:var(--muted);flex:1;line-height:1.4}
+.bk-v{color:var(--ink);text-align:right;font-size:9.5px;min-width:52px}
+.bk-sub{display:flex;justify-content:space-between;padding:3.5px 0;margin-top:1px;font-size:10px;font-weight:500;border-top:1px solid var(--border)}
+.bk-sub .bk-n{color:var(--ink)}
+
+/* Allowance lines get a gold tint */
+.bk-allow{background:rgba(180,140,40,.05);border-radius:2px;padding:2.5px 4px;margin:0 -4px}
+.bk-allow .bk-n{color:var(--ink)}
+.bk-allow .bk-v{color:var(--gold);font-weight:500}
+.allow-note{font-size:8px;color:var(--gold);opacity:.75;font-style:italic;margin-top:1px;display:block}
+
+.mk-line{display:flex;justify-content:space-between;font-size:10px;padding:2.5px 0;color:var(--muted)}
+.mk-line.ohp{color:var(--teal);font-weight:500;margin-top:2px}
+
+.cx-wrap{margin:.6rem 0 .4rem}
+.cx-lbl{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.cx-bar{display:flex;gap:3px;margin-bottom:2px}
+.cx-seg{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background .28s}
+.cx-seg.on{background:var(--gold)}
+.cx-seg.hi{background:var(--rust)}
+.cx-v{font-size:9px;color:var(--muted)}
+
+.print-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;color:var(--muted);transition:all .14s;margin-top:.5rem}
+.print-btn:hover{border-color:var(--gold);color:var(--gold)}
+.disc{font-size:8.5px;color:var(--muted);line-height:1.65;margin-top:.65rem;opacity:.6}
+
+/* ---- PRINT — estimate panel only ---- */
+@media print{
+  /* hide everything except the estimate panel */
+  .hdr, .info-band, .left, .print-btn, .cond, .cx-wrap { display:none !important }
+
+  body { background:#fff; margin:0; padding:0; font-size:11px }
+
+  .main {
+    display:block;
+    min-height:unset;
+  }
+
+  .right {
+    display:block;
+    position:static;
+    height:auto;
+    overflow:visible;
+    background:#fff;
+    padding:0;
+    width:100%;
+    max-width:600px;
+    margin:0 auto;
+  }
+
+  /* Print header block injected via ::before on .right */
+  .right::before {
+    content:'';
+    display:block;
+  }
+
+  .print-header {
+    display:flex !important;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding-bottom:12px;
+    border-bottom:2px solid #17150e;
+    margin-bottom:16px;
+  }
+  .print-co-name {
+    font-family:'Fraunces',serif;
+    font-size:18px;
+    font-weight:300;
+    color:#17150e;
+  }
+  .print-co-name em { font-style:italic; color:#b48c28 }
+  .print-co-sub {
+    font-size:9px;
+    color:#696650;
+    margin-top:3px;
+    letter-spacing:.05em;
+  }
+  .print-proj {
+    text-align:right;
+    font-size:10px;
+    color:#696650;
+    line-height:1.8;
+  }
+  .print-proj strong { color:#17150e }
+
+  .est-lbl { display:none }
+
+  /* Big number — full-width on print */
+  .bignum {
+    background:#17150e !important;
+    color:#f6f4ec;
+    border-radius:4px;
+    padding:14px 18px;
+    margin-bottom:14px;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  .bn-val { font-size:28px !important }
+
+  /* Section headings */
+  .bk-hd {
+    font-size:8px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#696650;
+    padding-bottom:3px;
+    border-bottom:1px solid rgba(23,21,14,.15);
+    margin-bottom:3px;
+  }
+
+  .bk-line { font-size:10px; padding:2px 0 }
+  .bk-sub  { font-size:10px; padding:3px 0 }
+
+  /* Allowances — gold left border on paper */
+  .bk-allow {
+    background:none !important;
+    border-left:2px solid #b48c28;
+    padding-left:5px;
+    margin:0 -5px 0 0;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  .bk-allow .bk-v { color:#b48c28 }
+
+  /* OH&P line */
+  .mk-line.ohp { color:#196060; font-weight:500; font-size:11px; margin-top:4px }
+
+  /* Signature block at bottom */
+  .print-footer {
+    display:flex !important;
+    justify-content:space-between;
+    margin-top:24px;
+    padding-top:12px;
+    border-top:1px solid rgba(23,21,14,.15);
+    gap:24px;
+  }
+  .sig-block { flex:1 }
+  .sig-label { font-size:9px; color:#696650; letter-spacing:.08em; text-transform:uppercase; margin-bottom:20px }
+  .sig-line { border-top:1px solid #696650; padding-top:4px; font-size:9px; color:#696650 }
+
+  .disc {
+    display:block !important;
+    font-size:8px;
+    color:#696650;
+    margin-top:12px;
+    opacity:.7;
+    line-height:1.6;
+  }
+}
+@media(max-width:880px){
+  .main{grid-template-columns:1fr}
+  .right{position:static;height:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-eye">Field Estimating Tools — Bathroom</div>
+    <h1>Renovation<br><em>Quick Estimator</em></h1>
+    <div class="hdr-meta">2024 pricing · NE/Mid-Atlantic US baseline</div>
+  </div>
+  <div class="hdr-tagline">Answer every question.<br>Get a real number.<br>Know before you go.</div>
+</div>
+
+<div class="info-band">
+  <div class="ifield"><span class="ilbl">Client</span><input class="iinput" id="clientName" placeholder="Client name" type="text"></div>
+  <div class="ifield"><span class="ilbl">Address</span><input class="iinput" id="addr" placeholder="Project address" type="text"></div>
+  <div class="ifield"><span class="ilbl">Date</span><input class="iinput sm" id="estDate" type="text"></div>
+  <div class="ifield"><span class="ilbl">Est. #</span><input class="iinput sm" id="estNum" placeholder="001" type="text"></div>
+  <div class="ifield"><span class="ilbl">Sq Ft</span><input class="iinput sm" id="sqft" type="number" value="65" min="20" max="400" oninput="calc()"></div>
+</div>
+
+<div class="main">
+<div class="left">
+
+<div style="margin-bottom:1.25rem">
+  <div class="cond">
+    <div class="cond-lbl">Site conditions assessed?</div>
+    <div class="cond-opts">
+      <button class="copt active" data-cond="unknown" onclick="setCond(this,'unknown')">Estimating blind</button>
+      <button class="copt" data-cond="known" onclick="setCond(this,'known')">Contractor walked job</button>
+    </div>
+    <div class="cond-note" id="cond-note">Blind estimate: ±20% band applied. Range tightens once you've walked the job.</div>
+  </div>
+</div>
+
+<!-- 01 DEMO -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-name">Demo</span></div>
+  <div class="qgrid">
+    <div class="qcard">
+      <div class="qlbl">Demo scope</div>
+      <div class="opts">
+        <button class="opt sA" data-q="demoScope" data-v="none" onclick="pick(this)">None / cosmetic</button>
+        <button class="opt" data-q="demoScope" data-v="partial" onclick="pick(this)">Partial (tile + fixtures)</button>
+        <button class="opt" data-q="demoScope" data-v="full" onclick="pick(this)">Full gut to studs</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Hazmat / old home risk <span class="sec-tag tag-risk">Risk</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="hazmat" data-v="no" onclick="pick(this)">No / post-1980</button>
+        <button class="opt" data-q="hazmat" data-v="possible" onclick="pick(this)">Pre-1980, not tested</button>
+        <button class="opt" data-q="hazmat" data-v="confirmed" onclick="pick(this)">Confirmed hazmat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 FRAMING -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-name">Framing</span><span class="sec-tag tag-cost">High $$</span></div>
+  <div class="qgrid three">
+    <div class="qcard">
+      <div class="qlbl">Walls moving or added?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="walls" data-v="no" onclick="pick(this)">No change</button>
+        <button class="opt" data-q="walls" data-v="nonstructural" onclick="pick(this)">Non-structural move</button>
+        <button class="opt" data-q="walls" data-v="new" onclick="pick(this)">New wall(s) added</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Structural changes?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="structural" data-v="no" onclick="pick(this)">No</button>
+        <button class="opt" data-q="structural" data-v="beam" onclick="pick(this)">Beam / header work</button>
+        <button class="opt" data-q="structural" data-v="loadbearing" onclick="pick(this)">Load-bearing wall</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Addition required? <span class="sec-tag tag-cost">$$</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="addition" data-v="no" onclick="pick(this)">No</button>
+        <button class="opt" data-q="addition" data-v="bump" onclick="pick(this)">Small bump-out</button>
+        <button class="opt" data-q="addition" data-v="addition" onclick="pick(this)">Full addition</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 PLUMBING -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-name">Plumbing</span><span class="sec-tag tag-cost">Major cost driver</span><span class="sec-tag tag-sub">Sub</span></div>
+  <div class="qgrid">
+    <div class="qcard">
+      <div class="qlbl">Any plumbing relocating?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="plumbMove" data-v="no" onclick="pick(this)">No move</button>
+        <button class="opt" data-q="plumbMove" data-v="minor" onclick="pick(this)">Minor (&lt;2 ft)</button>
+        <button class="opt" data-q="plumbMove" data-v="major" onclick="pick(this)">Major relocation</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Fixture count</div>
+      <div class="opts">
+        <button class="opt sA" data-q="fixtureCount" data-v="half" onclick="pick(this)">Half bath</button>
+        <button class="opt" data-q="fixtureCount" data-v="full" onclick="pick(this)">Full bath</button>
+        <button class="opt" data-q="fixtureCount" data-v="master" onclick="pick(this)">Master / dual</button>
+      </div>
+    </div>
+  </div>
+  <div class="qgrid" style="margin-top:9px">
+    <div class="qcard">
+      <div class="qlbl">New fixtures being added?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="newFixtures" data-v="none" onclick="pick(this)">None added</button>
+        <button class="opt" data-q="newFixtures" data-v="one" onclick="pick(this)">1 new (shower/sink/toilet)</button>
+        <button class="opt" data-q="newFixtures" data-v="multi" onclick="pick(this)">2+ new fixtures</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Supply line condition</div>
+      <div class="opts">
+        <button class="opt sA" data-q="supply" data-v="keep" onclick="pick(this)">Keep / PEX ok</button>
+        <button class="opt" data-q="supply" data-v="replace" onclick="pick(this)">Replace copper</button>
+        <button class="opt" data-q="supply" data-v="galv" onclick="pick(this)">Replace galvanized</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 ELECTRICAL -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-name">Electrical</span><span class="sec-tag tag-sub">Sub</span></div>
+  <div class="qgrid">
+    <div class="qcard">
+      <div class="qlbl">Electrical scope</div>
+      <div class="opts">
+        <button class="opt sA" data-q="elec" data-v="swap" onclick="pick(this)">Swap fixtures only</button>
+        <button class="opt" data-q="elec" data-v="circuits" onclick="pick(this)">Add GFCI / circuits</button>
+        <button class="opt" data-q="elec" data-v="rewire" onclick="pick(this)">Full rewire</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Exhaust fan</div>
+      <div class="opts">
+        <button class="opt sA" data-q="fan" data-v="keep" onclick="pick(this)">Keep existing</button>
+        <button class="opt" data-q="fan" data-v="replace" onclick="pick(this)">Replace unit</button>
+        <button class="opt" data-q="fan" data-v="newduct" onclick="pick(this)">New unit + new duct</button>
+      </div>
+    </div>
+  </div>
+  <div class="qgrid" style="margin-top:9px">
+    <div class="qcard">
+      <div class="qlbl">Heated floor</div>
+      <div class="opts">
+        <button class="opt sA" data-q="heat" data-v="no" onclick="pick(this)">No</button>
+        <button class="opt" data-q="heat" data-v="yes" onclick="pick(this)">Yes — electric mat</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Lighting</div>
+      <div class="opts">
+        <button class="opt sA" data-q="lighting" data-v="swap" onclick="pick(this)">Swap fixtures</button>
+        <button class="opt" data-q="lighting" data-v="recessed" onclick="pick(this)">Add recessed cans</button>
+        <button class="opt" data-q="lighting" data-v="full" onclick="pick(this)">Full lighting plan</button>
+      </div>
+    </div>
+  </div>
+  <div class="qgrid one" style="margin-top:9px">
+    <div class="qcard">
+      <div class="qlbl">New panel or sub-panel required? <span class="sec-tag tag-cost">$$</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="panel" data-v="no" onclick="pick(this)">No — existing panel ok</button>
+        <button class="opt" data-q="panel" data-v="subpanel" onclick="pick(this)">Sub-panel needed</button>
+        <button class="opt" data-q="panel" data-v="fullpanel" onclick="pick(this)">Full panel upgrade</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 FLOORING -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">05</span><span class="sec-name">Flooring</span><span class="sec-tag tag-sub">Sub — installed price</span></div>
+  <div class="qgrid">
+    <div class="qcard">
+      <div class="qlbl">Flooring type</div>
+      <div class="opts">
+        <button class="opt sA" data-q="flooringType" data-v="vinyl" onclick="pick(this)">Sheet vinyl</button>
+        <button class="opt" data-q="flooringType" data-v="lvp" onclick="pick(this)">LVP / LVT</button>
+        <button class="opt" data-q="flooringType" data-v="tile" onclick="pick(this)">Ceramic / porcelain</button>
+        <button class="opt" data-q="flooringType" data-v="stone" onclick="pick(this)">Natural stone</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">New subfloor needed?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="subfloor" data-v="no" onclick="pick(this)">No — solid existing</button>
+        <button class="opt" data-q="subfloor" data-v="patch" onclick="pick(this)">Patch sections</button>
+        <button class="opt" data-q="subfloor" data-v="full" onclick="pick(this)">Full replacement</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 TILE & WATERPROOFING -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">06</span><span class="sec-name">Tile &amp; Waterproofing</span><span class="sec-tag tag-sub">Sub — installed price</span></div>
+  <div class="qgrid">
+    <div class="qcard">
+      <div class="qlbl">Tile being installed? (walls/shower)</div>
+      <div class="opts">
+        <button class="opt sA" data-q="anyTile" data-v="no" onclick="pick(this)">No tile</button>
+        <button class="opt" data-q="anyTile" data-v="yes" onclick="pick(this)">Yes</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Tile grade (all tile on job)</div>
+      <div class="opts">
+        <button class="opt sA" data-q="tileGrade" data-v="builder" onclick="pick(this)">Builder (&lt;$3/sf mat)</button>
+        <button class="opt" data-q="tileGrade" data-v="mid" onclick="pick(this)">Mid ($3–8/sf mat)</button>
+        <button class="opt" data-q="tileGrade" data-v="premium" onclick="pick(this)">Premium ($8+/sf mat)</button>
+      </div>
+    </div>
+  </div>
+  <div class="qgrid" style="margin-top:9px">
+    <div class="qcard">
+      <div class="qlbl">Tile shower pan?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="tilePan" data-v="no" onclick="pick(this)">No</button>
+        <button class="opt" data-q="tilePan" data-v="hotmop" onclick="pick(this)">Hot-mop liner pan</button>
+        <button class="opt" data-q="tilePan" data-v="custom" onclick="pick(this)">Custom mud-set tile floor</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Tile shower / tub surround?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="tileSurround" data-v="no" onclick="pick(this)">No</button>
+        <button class="opt" data-q="tileSurround" data-v="standard" onclick="pick(this)">Standard surround</button>
+        <button class="opt" data-q="tileSurround" data-v="custom" onclick="pick(this)">Custom + niche(s)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 FIXTURES (ALLOWANCES) -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">07</span><span class="sec-name">Fixtures</span><span class="sec-tag tag-allow">Allowances</span></div>
+  <div class="qgrid">
+    <div class="qcard">
+      <div class="qlbl">Vanity / cabinetry <span class="sec-tag tag-allow">allowance</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="vanity" data-v="keep" onclick="pick(this)">Keep existing</button>
+        <button class="opt" data-q="vanity" data-v="stock" onclick="pick(this)">Stock ($400–800)</button>
+        <button class="opt" data-q="vanity" data-v="semi" onclick="pick(this)">Semi-custom ($800–2k)</button>
+        <button class="opt" data-q="vanity" data-v="custom" onclick="pick(this)">Custom ($2k–5k)</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Countertop <span class="sec-tag tag-allow">allowance</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="counter" data-v="cultured" onclick="pick(this)">Cultured marble</button>
+        <button class="opt" data-q="counter" data-v="quartz" onclick="pick(this)">Quartz / granite</button>
+        <button class="opt" data-q="counter" data-v="marble" onclick="pick(this)">Natural marble</button>
+      </div>
+    </div>
+  </div>
+  <div class="qgrid" style="margin-top:9px">
+    <div class="qcard">
+      <div class="qlbl">Toilet <span class="sec-tag tag-allow">allowance</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="toilet" data-v="keep" onclick="pick(this)">Keep existing</button>
+        <button class="opt" data-q="toilet" data-v="standard" onclick="pick(this)">Standard ($200–400)</button>
+        <button class="opt" data-q="toilet" data-v="comfort" onclick="pick(this)">Comfort ht. / smart ($500–1.2k)</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Tub / shower base (if not tile) <span class="sec-tag tag-allow">allowance</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="tubUnit" data-v="keep" onclick="pick(this)">Keep / N/A</button>
+        <button class="opt" data-q="tubUnit" data-v="alcove" onclick="pick(this)">Alcove tub ($600–1.2k)</button>
+        <button class="opt" data-q="tubUnit" data-v="prefabshower" onclick="pick(this)">Prefab shower base ($300–700)</button>
+        <button class="opt" data-q="tubUnit" data-v="freestand" onclick="pick(this)">Freestanding tub ($1.5k–4k)</button>
+      </div>
+    </div>
+  </div>
+  <div class="qgrid" style="margin-top:9px">
+    <div class="qcard">
+      <div class="qlbl">Faucets &amp; shower fixtures <span class="sec-tag tag-allow">allowance</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="hw" data-v="builder" onclick="pick(this)">Builder (&lt;$250 total)</button>
+        <button class="opt" data-q="hw" data-v="mid" onclick="pick(this)">Mid ($250–700)</button>
+        <button class="opt" data-q="hw" data-v="premium" onclick="pick(this)">Premium ($700+)</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Grab bars &amp; accessibility</div>
+      <div class="opts">
+        <button class="opt sA" data-q="access" data-v="none" onclick="pick(this)">None</button>
+        <button class="opt" data-q="access" data-v="basic" onclick="pick(this)">Basic grab bars (2–3)</button>
+        <button class="opt" data-q="access" data-v="ada" onclick="pick(this)">Full ADA package</button>
+      </div>
+    </div>
+  </div>
+  <div class="qgrid one" style="margin-top:9px">
+    <div class="qcard">
+      <div class="qlbl">Shower enclosure <span class="sec-tag tag-allow">allowance</span></div>
+      <div class="opts">
+        <button class="opt sA" data-q="enclosure" data-v="curtain" onclick="pick(this)">Curtain rod</button>
+        <button class="opt" data-q="enclosure" data-v="framed" onclick="pick(this)">Framed glass ($600–900)</button>
+        <button class="opt" data-q="enclosure" data-v="semiframe" onclick="pick(this)">Semi-frameless ($900–1.4k)</button>
+        <button class="opt" data-q="enclosure" data-v="frameless" onclick="pick(this)">Frameless glass ($1.4k–2.5k)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 DOORS / WINDOWS / TRIM -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">08</span><span class="sec-name">Doors, Windows &amp; Trim</span></div>
+  <div class="qgrid three">
+    <div class="qcard">
+      <div class="qlbl">New door?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="door" data-v="keep" onclick="pick(this)">Keep existing</button>
+        <button class="opt" data-q="door" data-v="standard" onclick="pick(this)">Standard swing</button>
+        <button class="opt" data-q="door" data-v="pocket" onclick="pick(this)">Pocket door</button>
+        <button class="opt" data-q="door" data-v="barn" onclick="pick(this)">Barn door</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">New window?</div>
+      <div class="opts">
+        <button class="opt sA" data-q="window" data-v="no" onclick="pick(this)">No change</button>
+        <button class="opt" data-q="window" data-v="replace" onclick="pick(this)">Replace in-kind</button>
+        <button class="opt" data-q="window" data-v="new" onclick="pick(this)">New opening</button>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="qlbl">Trim work</div>
+      <div class="opts">
+        <button class="opt sA" data-q="trim" data-v="keep" onclick="pick(this)">Keep existing</button>
+        <button class="opt" data-q="trim" data-v="standard" onclick="pick(this)">Standard replace</button>
+        <button class="opt" data-q="trim" data-v="complex" onclick="pick(this)">Complex / custom</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 YOUR NUMBERS -->
+<div class="sec">
+  <div class="sec-hdr"><span class="sec-num">09</span><span class="sec-name">Your Numbers</span></div>
+  <div class="num-row">
+    <div class="nfield">
+      <label>Overhead %</label>
+      <input type="number" id="overhead" value="18" min="0" max="50" oninput="calc()">
+      <div class="hint">Typical 15–25%</div>
+    </div>
+    <div class="nfield">
+      <label>Profit %</label>
+      <input type="number" id="profit" value="12" min="0" max="40" oninput="calc()">
+      <div class="hint">Typical 8–15%</div>
+    </div>
+    <div class="nfield">
+      <label>Labor rate $/hr</label>
+      <input type="number" id="laborRate" value="68" min="30" max="150" oninput="calc()">
+      <div class="hint">Burdened in-house rate</div>
+    </div>
+  </div>
+  <div class="num-row two">
+    <div class="nfield">
+      <label>Permit allowance $</label>
+      <input type="number" id="permit" value="900" min="0" max="8000" oninput="calc()">
+      <div class="hint">Varies by municipality</div>
+    </div>
+    <div class="nfield">
+      <label>Contingency %</label>
+      <input type="number" id="contingency" value="5" min="0" max="25" oninput="calc()">
+      <div class="hint">Hidden conditions buffer</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /left -->
+
+<!-- ===== RIGHT PANEL ===== -->
+<div class="right">
+
+  <!-- PRINT HEADER (hidden on screen, shown on print via JS before printing) -->
+  <div class="print-header" id="print-header" style="display:none">
+    <div>
+      <div class="print-co-name">Your Company <em>Name</em></div>
+      <div class="print-co-sub">License #: _____________ &nbsp;·&nbsp; Phone: _____________ &nbsp;·&nbsp; yourwebsite.com</div>
+    </div>
+    <div class="print-proj">
+      <div><strong id="pp-client">&nbsp;</strong></div>
+      <div id="pp-addr">&nbsp;</div>
+      <div>Date: <strong id="pp-date">&nbsp;</strong> &nbsp;·&nbsp; Est. #<strong id="pp-num">&nbsp;</strong></div>
+      <div id="pp-sqft">&nbsp;</div>
+    </div>
+  </div>
+
+  <div class="est-lbl">Live Estimate</div>
+
+  <div class="bignum">
+    <div class="bn-eyebrow">Most likely project cost</div>
+    <div class="bn-val" id="bn-mid">—</div>
+    <div class="bn-range" id="bn-range">Range: — – —</div>
+    <div class="bn-psf" id="bn-psf">—</div>
+  </div>
+
+  <!-- LABOR -->
+  <div class="bk-sec">
+    <div class="bk-hd">In-House Labor</div>
+    <div class="bk-line"><span class="bk-n">Demo + rough work</span><span class="bk-v" id="r-ldemo">—</span></div>
+    <div class="bk-line"><span class="bk-n">Framing / carpentry</span><span class="bk-v" id="r-lframe">—</span></div>
+    <div class="bk-line"><span class="bk-n">Drywall + paint</span><span class="bk-v" id="r-ldw">—</span></div>
+    <div class="bk-line"><span class="bk-n">Trim + doors + windows</span><span class="bk-v" id="r-ltrim">—</span></div>
+    <div class="bk-line"><span class="bk-n">Fixture install + finish</span><span class="bk-v" id="r-lfinish">—</span></div>
+    <div class="bk-sub"><span class="bk-n">Labor subtotal</span><span class="bk-v" id="r-labsub">—</span></div>
+  </div>
+
+  <!-- MATERIALS (non-fixture) -->
+  <div class="bk-sec">
+    <div class="bk-hd">Materials</div>
+    <div class="bk-line"><span class="bk-n">Demo / dumpster</span><span class="bk-v" id="r-demo">—</span></div>
+    <div class="bk-line"><span class="bk-n">Framing lumber + hardware</span><span class="bk-v" id="r-framing">—</span></div>
+    <div class="bk-line"><span class="bk-n">Subfloor material</span><span class="bk-v" id="r-subfloor">—</span></div>
+    <div class="bk-line"><span class="bk-n">Drywall / cement board</span><span class="bk-v" id="r-drywall">—</span></div>
+    <div class="bk-line"><span class="bk-n">Paint + sundries</span><span class="bk-v" id="r-paint">—</span></div>
+    <div class="bk-line"><span class="bk-n">Door(s) + hardware</span><span class="bk-v" id="r-door">—</span></div>
+    <div class="bk-line"><span class="bk-n">Window</span><span class="bk-v" id="r-window">—</span></div>
+    <div class="bk-line"><span class="bk-n">Trim material</span><span class="bk-v" id="r-trim">—</span></div>
+    <div class="bk-line"><span class="bk-n">Misc / fasteners / supplies</span><span class="bk-v" id="r-misc">—</span></div>
+    <div class="bk-sub"><span class="bk-n">Materials subtotal</span><span class="bk-v" id="r-matsub">—</span></div>
+  </div>
+
+  <!-- SUBCONTRACTORS -->
+  <div class="bk-sec">
+    <div class="bk-hd">Subcontractors <span class="bk-hd-tag" style="background:var(--teal-lt);color:var(--teal)">installed price incl. mat+labor</span></div>
+    <div class="bk-line"><span class="bk-n">Plumbing</span><span class="bk-v" id="r-plumb">—</span></div>
+    <div class="bk-line"><span class="bk-n">Electrical</span><span class="bk-v" id="r-elec">—</span></div>
+    <div class="bk-line"><span class="bk-n">Panel upgrade</span><span class="bk-v" id="r-panel">—</span></div>
+    <div class="bk-line"><span class="bk-n">Flooring (installed)</span><span class="bk-v" id="r-flooring">—</span></div>
+    <div class="bk-line"><span class="bk-n">Tile work (installed)</span><span class="bk-v" id="r-tile">—</span></div>
+    <div class="bk-line"><span class="bk-n">Hazmat / abatement</span><span class="bk-v" id="r-hazmat">—</span></div>
+    <div class="bk-sub"><span class="bk-n">Subs subtotal</span><span class="bk-v" id="r-subsub">—</span></div>
+  </div>
+
+  <!-- FIXTURE ALLOWANCES -->
+  <div class="bk-sec">
+    <div class="bk-hd">Fixture Allowances <span class="bk-hd-tag" style="background:var(--gold-lt);color:var(--gold)">owner selects</span></div>
+    <div class="bk-line bk-allow"><span class="bk-n">Vanity / cabinetry</span><span class="bk-v" id="r-vanity">—</span></div>
+    <div class="bk-line bk-allow"><span class="bk-n">Countertop</span><span class="bk-v" id="r-counter">—</span></div>
+    <div class="bk-line bk-allow"><span class="bk-n">Toilet</span><span class="bk-v" id="r-toilet">—</span></div>
+    <div class="bk-line bk-allow"><span class="bk-n">Tub / shower unit</span><span class="bk-v" id="r-tubunit">—</span></div>
+    <div class="bk-line bk-allow"><span class="bk-n">Faucets &amp; fixtures</span><span class="bk-v" id="r-hw">—</span></div>
+    <div class="bk-line bk-allow"><span class="bk-n">Shower enclosure</span><span class="bk-v" id="r-enclosure">—</span></div>
+    <div class="bk-line bk-allow"><span class="bk-n">Grab bars / accessibility</span><span class="bk-v" id="r-access">—</span></div>
+    <div class="bk-sub"><span class="bk-n">Allowances subtotal</span><span class="bk-v" id="r-allowsub">—</span></div>
+  </div>
+
+  <!-- PROJECT COSTS -->
+  <div class="bk-sec">
+    <div class="bk-hd">Project Costs</div>
+    <div class="bk-line"><span class="bk-n">Permit allowance</span><span class="bk-v" id="r-permit">—</span></div>
+    <div class="bk-line"><span class="bk-n">Contingency</span><span class="bk-v" id="r-cont">—</span></div>
+    <div class="bk-sub"><span class="bk-n">Direct cost total</span><span class="bk-v" id="r-direct">—</span></div>
+  </div>
+
+  <div class="mk-line ohp">
+    <span>OH&amp;P (<span id="r-ohppct">30</span>% combined)</span>
+    <span id="r-ohp">—</span>
+  </div>
+
+  <div class="cx-wrap">
+    <div class="cx-lbl">Project complexity</div>
+    <div class="cx-bar">
+      <div class="cx-seg" id="cx1"></div><div class="cx-seg" id="cx2"></div>
+      <div class="cx-seg" id="cx3"></div><div class="cx-seg" id="cx4"></div>
+      <div class="cx-seg" id="cx5"></div>
+    </div>
+    <div class="cx-v" id="cx-val">Low</div>
+  </div>
+
+  <button class="print-btn" onclick="printEstimate()">Print / Save as PDF</button>
+
+  <!-- PRINT FOOTER — signature lines, shown only on print -->
+  <div class="print-footer" style="display:none">
+    <div class="sig-block">
+      <div class="sig-label">Contractor signature</div>
+      <div class="sig-line">Date: _______________</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-label">Client acceptance</div>
+      <div class="sig-line">Date: _______________</div>
+    </div>
+  </div>
+
+  <div class="disc">
+    Midpoint estimate. Fixture allowances shown at mid-range average — actual cost depends on owner selections. Sub pricing (flooring, tile, plumbing, electrical) is all-in installed. ±<span id="r-bandpct">20</span>% band applied to grand total.
+  </div>
+</div><!-- /right -->
+</div><!-- /main -->
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+const Q = {
+  demoScope:'none', hazmat:'no',
+  walls:'no', structural:'no', addition:'no',
+  plumbMove:'no', fixtureCount:'full', newFixtures:'none', supply:'keep',
+  elec:'swap', fan:'keep', heat:'no', lighting:'swap', panel:'no',
+  flooringType:'vinyl', subfloor:'no',
+  anyTile:'no', tileGrade:'builder', tilePan:'no', tileSurround:'no',
+  vanity:'stock', counter:'cultured', toilet:'standard', tubUnit:'keep',
+  hw:'builder', access:'none', enclosure:'curtain',
+  door:'keep', window:'no', trim:'keep'
+};
+let siteKnown = false;
+
+document.getElementById('estDate').value = new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+
+// ================================================================
+// UI
+// ================================================================
+function pick(btn) {
+  const q = btn.dataset.q;
+  Q[q] = btn.dataset.v;
+  document.querySelectorAll(`[data-q="${q}"]`).forEach(b => b.className = 'opt');
+  const idx = [...btn.parentNode.children].indexOf(btn);
+  btn.classList.add(['sA','sB','sC','sD'][Math.min(idx,3)]);
+  calc();
+}
+function setCond(btn, val) {
+  siteKnown = val === 'known';
+  document.querySelectorAll('.copt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cond-note').textContent = siteKnown
+    ? 'Walked estimate: ±15% band — tighter number, more confident quote.'
+    : 'Blind estimate: ±20% band applied. Range narrows once you\'ve walked the job.';
+  calc();
+}
+
+// ================================================================
+// FORMAT
+// ================================================================
+const fmt  = v => '$' + Math.round(v).toLocaleString();
+const fmtK = v => {
+  if (!v) return '—';
+  return v >= 1000 ? '$' + (v/1000).toFixed(1).replace(/\.0$/,'') + 'k' : '$' + Math.round(v);
+};
+function s(id, val) { const e = document.getElementById(id); if(e) e.textContent = val; }
+
+// ================================================================
+// CALC  — all midpoints, band applied once at the end
+// ================================================================
+function calc() {
+  const sf      = Math.max(20, parseFloat(document.getElementById('sqft').value)||65);
+  const rate    = parseFloat(document.getElementById('laborRate').value)||68;
+  const ohPct   = parseFloat(document.getElementById('overhead').value)/100||.18;
+  const prPct   = parseFloat(document.getElementById('profit').value)/100||.12;
+  const permit  = parseFloat(document.getElementById('permit').value)||900;
+  const contPct = parseFloat(document.getElementById('contingency').value)/100||.05;
+  const band    = siteKnown ? 0.15 : 0.20;
+
+  // ---- IN-HOUSE LABOR (hours × rate) ----
+  // Demo
+  const demoHrs = {none:1, partial:7, full:16}[Q.demoScope];
+
+  // Framing (walls + structural + addition)
+  const wallHrs   = {no:0, nonstructural:12, new:22}[Q.walls];
+  const structHrs = {no:0, beam:16, loadbearing:36}[Q.structural];
+  const addHrs    = {no:0, bump:55, addition:180}[Q.addition];
+  const frameHrs  = wallHrs + structHrs + addHrs;
+
+  // Drywall + paint — scale with demo/gut depth
+  const dwBase = {none:4, partial:10, full:sf*0.30}[Q.demoScope];
+  const dwExtra = (Q.walls !== 'no' ? sf*0.10 : 0);
+  const paintHrs = 6;
+  const dwHrs = dwBase + dwExtra + paintHrs;
+
+  // Trim, doors, windows
+  const trimHrs  = {keep:1.5, standard:6, complex:12}[Q.trim];
+  const doorHrs  = {keep:0, standard:4, pocket:9, barn:7}[Q.door];
+  const winHrs   = {no:0, replace:4, new:10}[Q.window];
+  const finTrimHrs = trimHrs + doorHrs + winHrs;
+
+  // Finish install (fixtures, grab bars, accessories) — not tile/flooring
+  const baseFinish = {half:5, full:8, master:13}[Q.fixtureCount];
+  const accessHrs  = {none:0, basic:3, ada:7}[Q.access];
+  const newFixHrs  = {none:0, one:2, multi:5}[Q.newFixtures];
+  const finishHrs  = baseFinish + accessHrs + newFixHrs;
+
+  const lDemo    = demoHrs   * rate;
+  const lFrame   = frameHrs  * rate;
+  const lDw      = dwHrs     * rate;
+  const lTrim    = finTrimHrs* rate;
+  const lFinish  = finishHrs * rate;
+  const laborTotal = lDemo + lFrame + lDw + lTrim + lFinish;
+
+  // ---- MATERIALS (non-fixture, non-sub) ----
+  const mDemo    = {none:80, partial:260, full:620}[Q.demoScope]; // dumpster + misc
+  const mWalls   = {no:0, nonstructural:420, new:880}[Q.walls];
+  const mStruct  = {no:0, beam:950, loadbearing:2400}[Q.structural];
+  const mAdd     = {no:0, bump:3200, addition:14000}[Q.addition];  // materials only for addition framing
+  const mFraming = mWalls + mStruct + mAdd;
+  const mSubfloor= {no:0, patch:210, full:sf*3.20}[Q.subfloor];
+  // drywall/cement board — scale with scope
+  const mDrywall = {none: sf*0.60, partial: sf*1.40, full: sf*2.80}[Q.demoScope];
+  const mPaint   = 120 + (Q.demoScope==='full' ? 80 : 0);
+  const mDoor    = {keep:0, standard:320, pocket:580, barn:420}[Q.door];
+  const mWindow  = {no:0, replace:580, new:1400}[Q.window];
+  const mTrim    = {keep:0, standard:280, complex:680}[Q.trim];
+  const mMisc    = 180 + sf*0.80; // fasteners, tape, screws, caulk, etc.
+  const matTotal = mDemo + mFraming + mSubfloor + mDrywall + mPaint + mDoor + mWindow + mTrim + mMisc;
+
+  // ---- SUBCONTRACTORS — installed (mat+labor bundled) ----
+
+  // Plumbing (sub, all-in)
+  const plumbBase  = {half:1100, full:2200, master:3800}[Q.fixtureCount];
+  const plumbMove  = {no:0, minor:1000, major:2900}[Q.plumbMove];
+  const newFixSub  = {none:0, one:1300, multi:3000}[Q.newFixtures];
+  const supplySub  = {keep:0, replace:620, galv:1450}[Q.supply];
+  const plumbTotal = plumbBase + plumbMove + newFixSub + supplySub;
+
+  // Electrical (sub, all-in)
+  const elecBase   = {swap:500, circuits:1500, rewire:3600}[Q.elec];
+  const heatAdd    = Q.heat==='yes' ? sf*9.50 : 0;   // mat+install for electric mat
+  const fanAdd     = {keep:0, replace:380, newduct:820}[Q.fan];
+  const lightAdd   = {swap:0, recessed:900, full:1950}[Q.lighting];
+  const elecTotal  = elecBase + heatAdd + fanAdd + lightAdd;
+
+  const panelTotal = {no:0, subpanel:1900, fullpanel:4400}[Q.panel];
+
+  // Flooring sub — installed price per SF (mat + labor, sub's price)
+  // Sheet vinyl: $4–6/sf installed → mid $4.80
+  // LVP: $6–9/sf installed → mid $7.50
+  // Ceramic/porcelain tile: $10–16/sf installed → mid $13
+  // Natural stone: $18–28/sf installed → mid $23
+  const floorInstalled = {vinyl:4.80, lvp:7.50, tile:13.0, stone:23.0}[Q.flooringType];
+  const floorTotal = sf * floorInstalled * 1.10; // 10% waste/coverage factor
+
+  // Tile sub — installed price for WALL/shower tile (separate from floor tile if floor is tile type)
+  // Grade drives the material component; labor is relatively fixed per SF for sub
+  // Installed rates: builder $12–16/sf, mid $16–22/sf, premium $22–35/sf (wall tile, sub all-in)
+  const wallTileRate = {builder:14, mid:19, premium:28}[Q.tileGrade];
+  // Surround area estimate: sf * 2.0 for standard, * 2.5 for custom (more wall coverage)
+  const surroundSF = {no:0, standard:sf*2.0, custom:sf*2.5}[Q.tileSurround];
+  const surTileTotal = surroundSF * wallTileRate;
+  // Shower pan tile (if custom mud-set)
+  const panTile = {no:0, hotmop:520, custom:1100}[Q.tilePan]; // hotmop is sub labor only; custom includes mud + tile labor
+  const tileTotal = (Q.anyTile==='yes') ? surTileTotal + panTile : 0;
+
+  const hazmatTotal = {no:0, possible:750, confirmed:3400}[Q.hazmat];
+  const subTotal    = plumbTotal + elecTotal + panelTotal + floorTotal + tileTotal + hazmatTotal;
+
+  // ---- FIXTURE ALLOWANCES ----
+  // These are mid-range averages for owner selections
+  const aVanity    = {keep:0, stock:580, semi:1400, custom:3500}[Q.vanity];
+  const aCounter   = (Q.vanity==='keep') ? 0 : {cultured:200, quartz:550, marble:1600}[Q.counter];
+  const aToilet    = {keep:0, standard:290, comfort:820}[Q.toilet];
+  const aTubUnit   = {keep:0, alcove:820, prefabshower:420, freestand:2400}[Q.tubUnit];
+  const aHW        = {builder:220, mid:480, premium:1200}[Q.hw];
+  const aEnclosure = {curtain:55, framed:750, semiframe:1150, frameless:1900}[Q.enclosure];
+  const aAccess    = {none:0, basic:360, ada:1500}[Q.access];
+  const allowTotal = aVanity + aCounter + aToilet + aTubUnit + aHW + aEnclosure + aAccess;
+
+  // ---- TOTALS ----
+  const directBase  = laborTotal + matTotal + subTotal + allowTotal + permit;
+  const contingency = directBase * contPct;
+  const directTotal = directBase + contingency;
+  const ohAmt       = directTotal * ohPct;
+  const profitAmt   = (directTotal + ohAmt) * prPct;
+  const ohpTotal    = ohAmt + profitAmt;
+  const grandMid    = directTotal + ohpTotal;
+  const grandLo     = grandMid * (1 - band);
+  const grandHi     = grandMid * (1 + band);
+  const ohpCombined = Math.round((ohPct + prPct) * 100);
+
+  // ---- RENDER ----
+  s('bn-mid',   fmt(grandMid));
+  s('bn-range', `Range: ${fmt(grandLo)} – ${fmt(grandHi)}`);
+  s('bn-psf',   `${fmt(Math.round(grandMid/sf))}/sf · ±${band*100}% ${siteKnown?'(walked)':'(blind)'}`);
+  s('r-bandpct', band*100);
+
+  // Labor
+  s('r-ldemo',   fmtK(lDemo));
+  s('r-lframe',  lFrame  ? fmtK(lFrame)  : '—');
+  s('r-ldw',     fmtK(lDw));
+  s('r-ltrim',   fmtK(lTrim));
+  s('r-lfinish', fmtK(lFinish));
+  s('r-labsub',  fmt(laborTotal));
+
+  // Materials
+  s('r-demo',     fmtK(mDemo));
+  s('r-framing',  mFraming ? fmtK(mFraming) : '—');
+  s('r-subfloor', mSubfloor ? fmtK(mSubfloor) : '—');
+  s('r-drywall',  fmtK(mDrywall));
+  s('r-paint',    fmtK(mPaint));
+  s('r-door',     mDoor ? fmtK(mDoor) : '—');
+  s('r-window',   mWindow ? fmtK(mWindow) : '—');
+  s('r-trim',     mTrim ? fmtK(mTrim) : '—');
+  s('r-misc',     fmtK(mMisc));
+  s('r-matsub',   fmt(matTotal));
+
+  // Subs
+  s('r-plumb',    fmt(plumbTotal));
+  s('r-elec',     fmt(elecTotal));
+  s('r-panel',    panelTotal ? fmt(panelTotal) : '—');
+  s('r-flooring', fmt(floorTotal));
+  s('r-tile',     tileTotal ? fmt(tileTotal) : '—');
+  s('r-hazmat',   hazmatTotal ? fmt(hazmatTotal) : '—');
+  s('r-subsub',   fmt(subTotal));
+
+  // Allowances
+  s('r-vanity',    aVanity    ? fmt(aVanity)    : '—');
+  s('r-counter',   aCounter   ? fmt(aCounter)   : '—');
+  s('r-toilet',    aToilet    ? fmt(aToilet)    : '—');
+  s('r-tubunit',   aTubUnit   ? fmt(aTubUnit)   : '—');
+  s('r-hw',        fmt(aHW));
+  s('r-enclosure', fmt(aEnclosure));
+  s('r-access',    aAccess    ? fmt(aAccess)    : '—');
+  s('r-allowsub',  fmt(allowTotal));
+
+  // Project costs
+  s('r-permit',  fmt(permit));
+  s('r-cont',    fmt(contingency));
+  s('r-direct',  fmt(directTotal));
+
+  // OH&P
+  document.getElementById('r-ohppct').textContent = ohpCombined;
+  s('r-ohp', fmt(ohpTotal));
+
+  // Complexity
+  let score = 1;
+  if (Q.demoScope === 'full') score++;
+  if (Q.structural !== 'no' || Q.addition !== 'no') score++;
+  if (Q.plumbMove !== 'no' || Q.newFixtures !== 'none') score++;
+  if (Q.hazmat !== 'no' || Q.panel !== 'no') score++;
+  if (Q.tileSurround === 'custom') score = Math.max(score, 2);
+  score = Math.min(score, 5);
+  for (let i=1;i<=5;i++){
+    const el = document.getElementById('cx'+i);
+    el.className = 'cx-seg'+(i<=score?' on':'')+(score>=4&&i<=score?' hi':'');
+  }
+  s('cx-val', ['','Low','Moderate','Mid-high','High','Very High'][score]);
+}
+
+// Init button states on load
+document.querySelectorAll('.opt').forEach(btn => {
+  const q = btn.dataset.q, v = btn.dataset.v;
+  if (!q||!v||Q[q]!==v) return;
+  const idx = [...btn.parentNode.children].indexOf(btn);
+  btn.classList.add(['sA','sB','sC','sD'][Math.min(idx,3)]);
+});
+
+// ================================================================
+// PRINT — populate header fields, show print-only elements, then print
+// ================================================================
+function printEstimate() {
+  // Sync project info into print header
+  const client = document.getElementById('clientName').value || 'Client Name';
+  const addr   = document.getElementById('addr').value || '';
+  const date   = document.getElementById('estDate').value || '';
+  const num    = document.getElementById('estNum').value || '';
+  const sqft   = document.getElementById('sqft').value || '';
+
+  s('pp-client', client);
+  s('pp-addr',   addr);
+  s('pp-date',   date);
+  s('pp-num',    num);
+  s('pp-sqft',   sqft ? sqft + ' sq ft' : '');
+
+  // Show print-only elements temporarily
+  const header = document.getElementById('print-header');
+  const footer = document.querySelector('.print-footer');
+  header.style.display = 'flex';
+  footer.style.display = 'flex';
+
+  window.print();
+
+  // Hide again after print dialog closes
+  header.style.display = 'none';
+  footer.style.display = 'none';
+}
+
+calc();
+</script>
+</body>
+</html>
